@@ -1,0 +1,49 @@
+idea: 
+
+we would do something like zengrams, where u get to build a puzzle then have people solve it 
+
+pieces avaiable:
+1x1
+1x2
+1x3
+1x4
+L pieces, both right and left 
+3x3
+2x2
+t pieces 
+u can rotate ur pieces however u like (rotating already symmetric pieces won't do anything)
+
+
+
+u have option to color code ur pieces 
+
+to solve: the participant will be given pieces equal to the pieces u spent to create the picture 
+the participant will also be given the board, with any unused spaces turned into blanks, not to be included 
+
+Creator side:
+    - sandbox mode, where u have access to unlimited pieces 
+    - u can rotate and color code them however u like 
+participant side:
+    - limited amount of pieces given 
+        - pieces become greyed out when the count left is 0 
+    - can rotate however u like
+    - also can color code them however? 
+
+API:
+- rotateBlock(right) - where right is a boolean representing a right rotation or not 
+- selectBlock(selected) - used when user selects block to use 
+- placeBlock(x, y) - attempt to place block at location. Error if covers another block 
+    - also will call createBlock() which returns an array of transforms if u have capacity, or -1 if no more avaiable 
+    - create error message banner? idk, maybe flash red or something small 
+    - createBlock() returns an array of transforms that placeBlock can use, based on the rotations of the selected. 
+- removeBlock(x, y) - removes a block at that location. Requires id of block to remove all, DFS style. 
+- clearBoard() - clears the board of all colors, and sets idCounter to 0
+- selectColor(color) - used when user selects a color to use 
+
+
+options:
+canvas size
+    - 8x8
+    - 16x16
+    - 32x32 
+
