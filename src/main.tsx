@@ -1,6 +1,8 @@
 // Learn more at developers.reddit.com/docs
 import { Devvit, useState } from '@devvit/public-api';
-
+import { StartScreen } from './startScreen.js';
+import { CounterScreen } from './CounterScreen.js';
+import {DrawScreen} from './DrawScreen.js';
 
 Devvit.configure({
   redditAPI: true,
@@ -29,66 +31,26 @@ Devvit.addMenuItem({
   },
 });
 
-type PageAProps = {
-  setPage: (page: string) => void;
-}
-type PageBProps = {
-  setPage: (page: string) => void;
-  counter: number;
-  // take a number value or a function value. Return void
-  setCounter:  (value: number | ((prevState: number) => number)) => void;
-}
-
-const PageA = ({ setPage }: PageAProps) => (
-  <vstack
-    width="100%"
-    height="100%"
-    alignment="middle center"
-    gap="large"
-    backgroundColor="lightblue"
-  >
-    <text size="xxlarge">Page A</text>
-    <button onPress={() => setPage('b')}>Go to B</button>
-  </vstack>
-);
-
-const PageB = ({ setPage, counter, setCounter}: PageBProps) => (
-  <vstack height="100%" width="100%" gap="medium" alignment="center middle">
-    <image
-      url="Trollface.png"
-      description="logo"
-      imageHeight={256}
-      imageWidth={256}
-      height="48px"
-      width="48px"
-    />
-    <text size="large">{`Number of times a random person died: ${counter} Money: ${counter * 100000}`}</text>
-    <button appearance="primary" onPress={() => setCounter((counter) => counter + 1)}>
-      kill random person and get money 
-    </button>
-    <button onPress={() => setPage('a')}>Go to A</button>
-  </vstack>
-);
-
 // Add a post type definition
 Devvit.addCustomPostType({
   name: 'Experience Post',
-  height: 'regular',
-
+  height: 'tall',
+  
   render: (_context) => {
     const [counter, setCounter] = useState(0);
     const [page, setPage] = useState('a');
 
     let currentPage;
     switch (page) {
-      case 'a':
-        currentPage = <PageA setPage={setPage} />;
+      case 'startScreen':
+        currentPage = <StartScreen setPage={setPage} />;
         break;
-      case 'b':
-        currentPage = <PageB setPage={setPage} setCounter={setCounter} counter={counter}/>;
+      case 'drawScreen':
+        //currentPage = <CounterScreen setPage={setPage} setCounter={setCounter} counter={counter}/>;
+        currentPage = <DrawScreen setPage={setPage}/>
         break;
       default:
-        currentPage = <PageA setPage={setPage} />;
+        currentPage = <StartScreen setPage={setPage} />;
     }
     return (
       <blocks>
