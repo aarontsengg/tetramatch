@@ -17,8 +17,15 @@ Devvit.addMenuItem({
   onPress: async (_event, context) => {
     const { reddit, ui } = context;
     const subreddit = await reddit.getCurrentSubreddit();
+    const startDate = new Date('2024-12-04');
+    const currentDate = new Date();
+    const utcStartDate = Date.UTC(startDate.getFullYear(), startDate.getMonth(), startDate.getDate());
+    const utcCurrentDate = Date.UTC(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate());
+    const diffTime = utcCurrentDate - utcStartDate;
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1; // +1 to start counting from Tetramatch 1
+    const postTitle = `Tetramatch ${diffDays}`;
     await reddit.submitPost({
-      title: 'My devvit post',
+      title: postTitle,
       subredditName: subreddit.name,
       // The preview appears while the post loads
       preview: (
