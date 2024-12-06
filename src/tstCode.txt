@@ -1,0 +1,59 @@
+import {Devvit, } from '@devvit/public-api'
+
+type PageProps = {
+  setPage: (page: string) => void;
+}
+
+const PageA = ({ setPage }: PageProps) => (
+  <vstack
+    width="100%"
+    height="100%"
+    alignment="middle center"
+    gap="large"
+    backgroundColor="lightblue"
+  >
+    <text size="xxlarge">Page A</text>
+    <button onPress={() => setPage('b')}>Go to B</button>
+  </vstack>
+);
+
+const PageB = ({ setPage }: PageProps) => (
+  <vstack
+    width="100%"
+    height="100%"
+    alignment="middle center"
+    gap="large"
+    backgroundColor="pink"
+  >
+    <text size="xxlarge">Page B</text>
+    <button onPress={() => setPage('a')}>Go to A</button>
+  </vstack>
+);
+
+Devvit.addCustomPostType({
+  name: 'Name',
+  render: context => {
+    const { useState } = context;
+    const [page, setPage] = useState('a');
+
+    let currentPage;
+    switch (page) {
+      case 'a':
+        currentPage = <PageA setPage={setPage} />;
+        break;
+      case 'b':
+        currentPage = <PageB setPage={setPage} />;
+        break;
+      default:
+        currentPage = <PageA setPage={setPage} />;
+    }
+
+    return (
+      <blocks>
+        {currentPage}
+      </blocks>
+    )
+  }
+})
+
+export default Devvit

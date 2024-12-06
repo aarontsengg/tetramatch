@@ -1,9 +1,13 @@
 // Learn more at developers.reddit.com/docs
 import { Devvit, useState } from '@devvit/public-api';
+import { StartScreen } from './startScreen.js';
+import { CounterScreen } from './CounterScreen.js';
+import {DrawScreen} from './DrawScreen.js';
 
 Devvit.configure({
   redditAPI: true,
 });
+
 
 // Add a menu item to the subreddit menu for instantiating the new experience post
 Devvit.addMenuItem({
@@ -30,25 +34,28 @@ Devvit.addMenuItem({
 // Add a post type definition
 Devvit.addCustomPostType({
   name: 'Experience Post',
-  height: 'regular',
+  height: 'tall',
+  
   render: (_context) => {
     const [counter, setCounter] = useState(0);
+    const [page, setPage] = useState('a');
 
+    let currentPage;
+    switch (page) {
+      case 'startScreen':
+        currentPage = <StartScreen setPage={setPage} />;
+        break;
+      case 'drawScreen':
+        //currentPage = <CounterScreen setPage={setPage} setCounter={setCounter} counter={counter}/>;
+        currentPage = <DrawScreen setPage={setPage}/>
+        break;
+      default:
+        currentPage = <StartScreen setPage={setPage} />;
+    }
     return (
-      <vstack height="100%" width="100%" gap="medium" alignment="center middle">
-        <image
-          url="logo.png"
-          description="logo"
-          imageHeight={256}
-          imageWidth={256}
-          height="48px"
-          width="48px"
-        />
-        <text size="large">{`Click counter: ${counter}`}</text>
-        <button appearance="primary" onPress={() => setCounter((counter) => counter + 1)}>
-          Click me!
-        </button>
-      </vstack>
+      <blocks>
+        {currentPage}
+      </blocks>
     );
   },
 });
