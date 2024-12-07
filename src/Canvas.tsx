@@ -1,6 +1,7 @@
 import {Devvit, useState} from '@devvit/public-api'
-import { ShapeType } from './classes/ShapeType.js';
 import { Pixel } from './classes/PixelClass.js';
+import { shapes, GridPresets } from './classes/DataPresets.js';
+
 const colors = [
   "#FFFFFF",
   "#000000",
@@ -11,10 +12,7 @@ const colors = [
   "#2F80ED",
   "#9B51E0"
 ];
-
-const resolution = 8;
 const size = 16;
-//const { useState } = context;
 // must define these hooks in the exported function... 
 // grid get and set 
 function getPixel<T>(array: T[], resolution:number, x: number, y:number): T{
@@ -24,11 +22,6 @@ function setPixel<T>(array: T[], resolution:number, x: number, y:number, value: 
     array[x * resolution + y] = value;
 }
 
-type shapeCanvasProps = {
-  shape: ShapeType;
-  resolution: number;
-  numRow: number;
-}
 // We cannot use this function with React hooks
 function getBlankCanvas(resolution: number, numRow: number): Pixel[]{
     var tmp = new Array(resolution * resolution);
@@ -39,38 +32,63 @@ function getBlankCanvas(resolution: number, numRow: number): Pixel[]{
     }
     return tmp;
 }
-export const shapeCanvas = ({shape, resolution, numRow}: shapeCanvasProps) => {
+type shapeCanvasProps = {
+    presetID: number;
+    currShapeID: number;
+    setCurrShapeID: (arg: number) => void;
+}
+export const ShapeCanvas = ({presetID, currShapeID, setCurrShapeID}: shapeCanvasProps) => {
+    const [numRotations, setNumRotations] = useState(0); // this is numRotations
 
+    function rotateImage(resolution: number, rows: number, data: Pixel[]): Pixel[]{
+        let n = rows;
+        let m = resolution;
+        let nxt = new Array(resolution * rows).fill(null);
+        let n2 = (n % 2 == 0) ? ((n / 2) | 0) : ((n / 2) | 0) + 1  
+        let m2 = (m % 2 == 0) ? ((m / 2) | 0) : ((m / 2) | 0) + 1  
+        for (let i = 0; i < n2; i++) {
+            for (let j = 0; j < m2; j++) {
+                setPixel(nxt, rows, i, j, getPixel(data, resolution, n - j - 1, i));
+                setPixel(nxt, rows, m - j - 1, i, getPixel(data, resolution, n - i - 1, m - j - 1));
+                setPixel(nxt, rows, m - i - 1, n - j - 1, getPixel(data, resolution, j, m - i - 1));
+                setPixel(nxt, rows, j, n - i - 1, getPixel(data, resolution, i, j));
+            }
+        }
+        return nxt;
+    }
+    // setup shapes and grid 
+    var preset = GridPresets[presetID];
+    var [anchorX, anchorY, numRow, resolution, shapeID] = [preset.anchorX, preset.anchorY, preset.rows, preset.cols, preset.shapeID];
+    
+    if (numRotations % 2 == 1) {
+        var tmp = resolution;
+        resolution = numRow;
+        numRow = tmp;
+    }
     //BUG: This doesn't work unless we write the following code not in a method
-    var blankCanvas = new Array(resolution * resolution);
+    var blankCanvas = new Array(resolution * numRow); // I'm a little bit dull 
     for (let i = 0; i < numRow; i++) {
         for (let j = 0; j < resolution; j++) {
             blankCanvas[i * resolution + j] = new Pixel({x: i, y: j});
+            //console.log("colour",i,j, blankCanvas[i * resolution + j].color);
         }
     }
+
+    var shape = shapes[shapeID];
+    var pieces = shape.pieces;
+
+    for (let i = 0; i < pieces.length; i++) {
+        let [x, y] = pieces[i]; // array destructuring, yay... 
+        blankCanvas[(x + anchorX) * resolution + (y + anchorY)] = new Pixel({x: x, y: y, color:1});
+        // we need to do this add anchorX and anchorY thing
+        //setPixel(blankCanvas, resolution, x, y, new Pixel({x:x, y:y, color:parseInt(colors[2].slice(1), 16)}));
+    }
+    // shape canvas properties 
     const [data, setData] = useState(blankCanvas);
-    
-    /*const pixels = data.map((pixel, index) => (
-        <hstack
-        onPress={() => {
-            const newData = data;
-            var pix = newData[index];
-            console.log("Helloe " + pix.x + " " + pix.y + " lol");
-            pix.color = activeColor;
-            //newData[index] = activeColor;
-            console.log("Hello2", gridSize);
-            setData(newData);
-        }}
-        height={`${size}px`}
-        width={`${size}px`}
-        backgroundColor={colors[pixel.color]}
-        />
-    ));*/
-    
-    const gridSize = `${resolution * size}px`;
+
     // this builds it such that the true gridSize pixels wise is found after the resolution and size per pixel is specified 
     // what would be nice is if the size per pixel could be found from a specified resolution and gridSize. 
-    function getGridSize(resolution: number, size: number): Devvit.Blocks.SizeString | undefined {
+    function getGridSide(resolution: number, size: number): Devvit.Blocks.SizeString | undefined {
         return `${resolution * size}px`;
     }
     
@@ -81,52 +99,37 @@ export const shapeCanvas = ({shape, resolution, numRow}: shapeCanvasProps) => {
         }
         return result;
     }
-    // we need gridSize, resolution and pixels to be passed?
-    /*const Canvas = () => (
-        <vstack
-        cornerRadius="small"
-        border="thin"
-        height={getGridSize(resolution, size)}
-        width={getGridSize(resolution, size)}
-        >
-        {splitArray(pixels, resolution).map((row) => (
-            <hstack>{row}</hstack>
-        ))}
-        </vstack>
-    );*/
     const pixels = data.map((pixel, index) => (
         <hstack
-        onPress={() => { console.log("This shouldn't be pressable lol"); }}
+        // no on press here
         height={`${size}px`}
         width={`${size}px`}
         backgroundColor={colors[pixel.color]}
         />
     ));
-    /*const Canvas2 = (pixels2: JSX.Element[]) => (
-        <vstack
-        cornerRadius="small"
-        border="thin"
-        height={getGridSize(3, size)}
-        width={getGridSize(3, size)}
-        >
-        {splitArray(pixels2, 3).map((row) => (
-            <hstack>{row}</hstack>
-        ))}
-        </vstack>
-    );*/
    return (
-        <vstack gap="small" width="100%" height="100%" alignment="center middle">
-            <vstack
-            cornerRadius="small"
-            border="thin"
-            height={getGridSize(resolution, size)}
-            width={getGridSize(resolution, size)}
-            >
-            {splitArray(pixels, resolution).map((row) => (
-                <hstack>{row}</hstack>
-            ))}
+            <vstack border={currShapeID === shapeID ? "thick" : "none"}
+            borderColor='green'
+            padding={"xsmall"} >
+                <vstack
+                height={getGridSide(numRow, size)}
+                width={getGridSide(resolution, size)}
+                onPress={() => {
+                    if (currShapeID === shapeID) {console.log("Already Selected: Rotate Time!");
+                        let mat = rotateImage(resolution, numRow, data);
+                        setNumRotations((numRotations + 1) % 4); // increment numRotations by 1 
+                        setData(mat);
+                        
+                    }
+                    else setCurrShapeID(shapeID);
+                }}
+
+                >
+                {splitArray(pixels, resolution).map((row) => (
+                    <hstack>{row}</hstack>
+                ))}
+                </vstack>
             </vstack>
 
-        </vstack>
    )
 }

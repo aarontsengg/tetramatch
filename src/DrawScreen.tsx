@@ -1,4 +1,6 @@
 import {Devvit, useState} from '@devvit/public-api'
+import { ShapeCanvas } from './Canvas.js';
+import { ShapeType } from './classes/ShapeType.js';
 const colors = [
   "#FFFFFF",
   "#000000",
@@ -7,7 +9,20 @@ const colors = [
   "#F2C94C",
   "#27AE60",
   "#2F80ED",
-  "#9B51E0"
+  //"#7F00FF",
+  "#9B51E0",
+  "#4B0082",
+  "#964B00", 
+  /*"#964B00", 
+  "#964B00", 
+  "#964B00", 
+  "#964B00", 
+  "#964B00", 
+  "#964B00", 
+  "#964B00", 
+  "#964B00", */
+  //"#00FF00",
+  //"#FF0000"
 ];
 
 class Pixel {
@@ -61,9 +76,9 @@ type DrawScreenProps = {
 export const DrawScreen = ({setPage}: DrawScreenProps) => {
     const [activeColor, setActiveColor] = useState(defaultColor);
     const [data, setData] = useState(blankCanvas);
-    const [data2, setData2] = useState(blankCanvas);
 
-    const [currShape, setCurrShape] = useState("square"); // placeholder lol, we'll use an object  
+    const [currShapeID, setCurrShapeID] = useState(0); // placeholder lol, we'll use an object
+    // also this is shapeID  
     
     /*type ColorSelectorProps = {
         activeColor: number;
@@ -186,6 +201,11 @@ export const DrawScreen = ({setPage}: DrawScreenProps) => {
         <vstack gap="small" width="100%" height="100%" alignment="center middle">
             <Canvas />
             <ColorSelector />
+            <ShapeCanvas presetID = {0} currShapeID = {currShapeID} setCurrShapeID = {setCurrShapeID}/>
+            <ShapeCanvas presetID = {1} currShapeID = {currShapeID} setCurrShapeID = {setCurrShapeID}/>
+            <ShapeCanvas presetID = {2} currShapeID = {currShapeID} setCurrShapeID = {setCurrShapeID}/>
+            <ShapeCanvas presetID = {3} currShapeID = {currShapeID} setCurrShapeID = {setCurrShapeID}/>
+            <ShapeCanvas presetID = {4} currShapeID = {currShapeID} setCurrShapeID = {setCurrShapeID}/>
             <button onPress={() => setPage('startScreen')}>Go to Start</button>
 
         </vstack>
