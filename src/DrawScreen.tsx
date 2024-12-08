@@ -1,44 +1,9 @@
 import {Devvit, useState} from '@devvit/public-api'
 import { ShapeCanvas } from './Canvas.js';
 import { ShapeType } from './classes/ShapeType.js';
-const colors = [
-  "#FFFFFF",
-  "#000000",
-  "#EB5757",
-  "#F2994A",
-  "#F2C94C",
-  "#27AE60",
-  "#2F80ED",
-  //"#7F00FF",
-  "#9B51E0",
-  "#4B0082",
-  "#964B00", 
-  /*"#964B00", 
-  "#964B00", 
-  "#964B00", 
-  "#964B00", 
-  "#964B00", 
-  "#964B00", 
-  "#964B00", 
-  "#964B00", */
-  //"#00FF00",
-  //"#FF0000"
-];
+import { Pixel } from './classes/PixelClass.js';
+import { shapes, colors, GridPresets} from './classes/DataPresets.js';
 
-class Pixel {
-    color: number;
-    id: number;
-    x: number;
-    y: number;
-    // goofy looking constructor. This is necessary to specify typing and have all params optional 
-    // the = {} is the default lol 
-    constructor({color = 0xFFFFFF, id = 0, x = 0, y = 0}: {color?: number, id?: number, x?: number, y?: number} = {}) {
-        this.color = color;
-        this.id = id;
-        this.x = x;
-        this.y = y;
-    }
-}
 
 const resolution = 8;
 const size = 32;
@@ -74,17 +39,15 @@ type DrawScreenProps = {
   setPage: (page: string) => void;
 }
 export const DrawScreen = ({setPage}: DrawScreenProps) => {
+    var defBackColor = "#FCFAE8";
     const [activeColor, setActiveColor] = useState(defaultColor);
     const [data, setData] = useState(blankCanvas);
 
     const [currShapeID, setCurrShapeID] = useState(0); // placeholder lol, we'll use an object
+    const [idCTR, setIdCTR] = useState(1);
+    const [currShapeRotation, setCurrShapeRotation] = useState(0); // only set by shape selection
     // also this is shapeID  
     
-    /*type ColorSelectorProps = {
-        activeColor: number;
-        // take a number value or a function value. Return void
-        setActiveColor:  (value: number | ((prevState: number) => number)) => void;
-    }*/
     const ColorSelector = () => (
         <hstack width="100%" alignment="center">
         {/* nested hstack to negate grow */}
@@ -111,21 +74,85 @@ export const DrawScreen = ({setPage}: DrawScreenProps) => {
         </hstack>
         </hstack>
     );
-    
+    function checkInBounds(data: Pixel[], x: number, y: number, pieces: number[][]): Boolean {
+        // check if all pieces in bounds and doesn't overlap any other pieces 
+        for (let i = 0; i < pieces.length; i++) {
+            let [dx, dy] = pieces[i]; // array destructuring, yay... 
+            if (x + dx >= resolution ||
+                x + dx < 0 || 
+                y + dy >= resolution ||
+                y + dy < 0 ||
+                data[(x + dx) * resolution + y + dy].id != 0) return false; // not in bounds, return False 
+        }
+        return true;
+    }
+    function applyRotations(pieces: number[][], numRotations:number): number[][]{
+        // we need to deepcopy pieces first 
+        var ln = pieces.length;
+        var ret = Array.from({ length: ln }, () => new Array(2).fill(0));
+        for (let i = 0; i < ln; i++) {
+            let [x, y] = pieces[i]; // copies, not references 
+            for (let j = 0; j < numRotations; j++) {
+                let tmp = x;
+                x = y;
+                y = -tmp; // rotation, yay... 
+            }
+            ret[i][0] = x;
+            ret[i][1] = y;
+        }
+        return ret;
+
+    }
+    function drawShape(data: Pixel[], x: number, y: number, shapeID: number): number {
+        // this edits the canvas in place. Is this a good idea? 
+        var shape = shapes[shapeID];
+        var pieces = shape.pieces;
+        pieces = applyRotations(pieces, currShapeRotation);
+        if (!checkInBounds(data, x, y, pieces)) return 0; // if not in bounds, exit failure 
+
+        for (let i = 0; i < pieces.length; i++) {
+            let [dx, dy] = pieces[i]; // array destructuring, yay... 
+            data[(x + dx) * resolution + (y + dy)].color = activeColor; // all u need to do is set the active colour 
+            data[(x + dx) * resolution + (y + dy)].id = idCTR; // all u need to do is set the active colour 
+
+            // we need to do this add anchorX and anchorY thing
+        }
+        setIdCTR(idCTR + 1);
+        return 1; // exit success 
+    }
+    function erase(data: Pixel[], x: number, y: number): number {
+        // erase from data directly 
+        // this is an O(n**2) inefficient algorithm, that still works fast under small n (such as 8 or 16)
+        var id = data[x * resolution + y].id;
+        if (id === 0) return 0; // don't do anything 
+        // here we operate under the assumption that rows == cols, since we will only use 8x8 or 16x16 grid 
+        for (let i = 0; i < resolution; i++) {
+            for (let j = 0; j < resolution; j++) {
+                if (data[i * resolution + j].id === id) {
+                    data[i * resolution + j].id = 0;
+                    data[i * resolution + j].color = -1;
+                }
+            }
+        }
+        return 1;
+
+    }
     const pixels = data.map((pixel, index) => (
         <hstack
         onPress={() => {
+            console.log("Draw this shape:", currShapeID);
             const newData = data;
-            var pix = newData[index];
-            console.log("Helloe " + pix.x + " " + pix.y + " lol");
-            pix.color = activeColor;
-            //newData[index] = activeColor;
-            console.log("Hello2", gridSize);
-            setData(newData);
+            var success = 1;
+
+            if (currShapeID === -1) success = erase(data, pixel.x, pixel.y); // if -1, erase 
+            else success = drawShape(newData, pixel.x, pixel.y, currShapeID);
+
+            if (success === 1) setData(newData);
+            // no need to update data if unsuccessful operation
         }}
         height={`${size}px`}
         width={`${size}px`}
-        backgroundColor={colors[pixel.color]}
+        backgroundColor={pixel.color != -1 ? colors[pixel.color] : defBackColor} // use -1 for default background color
         />
     ));
     
@@ -143,12 +170,18 @@ export const DrawScreen = ({setPage}: DrawScreenProps) => {
         }
         return result;
     }
-    // we need gridSize, resolution and pixels to be passed?
-    /*type canvasProps = {
-        pixels: T[];
-        resolution: number;
-        So here's the thing, for a custom grid, you need to define gridSize yourself
-    }*/
+    function submit(data: Pixel[]): void {
+        // Query Reddit API for username/userID
+        console.log("Submitted by {username}");
+        for (let i = 0; i < resolution; i++) {
+            let s = '';
+            for (let j = 0; j < resolution; j++) {
+                let dat = data[i * resolution + j]
+                s = s.concat(`${dat.color}|${dat.id}\t`);
+            }
+            console.log(s);
+        }
+    }
     const Canvas = () => (
         <vstack
         cornerRadius="small"
@@ -161,53 +194,51 @@ export const DrawScreen = ({setPage}: DrawScreenProps) => {
         ))}
         </vstack>
     );
-    const pixels2 = data.map((pixel, index) => (
-        <hstack
-        onPress={() => {
-            const newData = data;
-            var pix = newData[index];
-            console.log("Helloe " + pix.x + " " + pix.y + " lol");
-            pix.color = activeColor;
-            //newData[index] = activeColor;
-            console.log("Hello2", gridSize);
-            setData(newData);
-        }}
-        height={`${size}px`}
-        width={`${size}px`}
-        backgroundColor={colors[pixel.color]}
-        />
-    ));
-    /*const Canvas2 = (pixels2: JSX.Element[]) => (
-        <vstack
-        cornerRadius="small"
-        border="thin"
-        height={getGridSize(3, size)}
-        width={getGridSize(3, size)}
-        >
-        {splitArray(pixels2, 3).map((row) => (
-            <hstack>{row}</hstack>
-        ))}
+    const Eraser = () => (
+        <vstack border={currShapeID === -1 ? "thick" : "none"}
+        borderColor='green'
+        padding={"xsmall"} >
+                <image
+                url="eraser.png"
+                description="logo"
+                imageHeight={256}
+                imageWidth={256}
+                height="48px"
+                width="48px"
+                onPress={() => {
+                    console.log("Eraser selected");
+                    setCurrShapeID(-1); // -1 stands in for eraser 
+                    // maybe we should use enums instead of numbers 
+                }}
+                />
         </vstack>
-    );*/
-    /*const Screen3 = () => (
-        <blocks>
-        <vstack gap="small" width="100%" height="100%" alignment="center middle">
-            <Canvas />
-            <ColorSelector />
-        </vstack>
-        </blocks>
-    )*/
+    );
    return (
-        <vstack gap="small" width="100%" height="100%" alignment="center middle">
-            <Canvas />
-            <ColorSelector />
-            <ShapeCanvas presetID = {0} currShapeID = {currShapeID} setCurrShapeID = {setCurrShapeID}/>
-            <ShapeCanvas presetID = {1} currShapeID = {currShapeID} setCurrShapeID = {setCurrShapeID}/>
-            <ShapeCanvas presetID = {2} currShapeID = {currShapeID} setCurrShapeID = {setCurrShapeID}/>
-            <ShapeCanvas presetID = {3} currShapeID = {currShapeID} setCurrShapeID = {setCurrShapeID}/>
-            <ShapeCanvas presetID = {4} currShapeID = {currShapeID} setCurrShapeID = {setCurrShapeID}/>
-            <button onPress={() => setPage('startScreen')}>Go to Start</button>
-
-        </vstack>
+        <hstack height="100%" padding='small' gap='small' alignment = 'center middle'>
+            <vstack gap="small" height="100%" alignment="center middle">
+                <Eraser />
+                <hstack
+                cornerRadius="small"
+                border="thin"
+                >
+                {splitArray(GridPresets, Math.ceil(GridPresets.length / 2)).map((GP, row) => (
+                    <vstack gap='small'>
+                    {GP.map((unused, index) => (
+                        <ShapeCanvas 
+                        presetID = {row * Math.ceil(GridPresets.length / 2) + index } 
+                        currShapeID = {currShapeID} 
+                        setCurrShapeID = {setCurrShapeID} 
+                        setCurrShapeRotation = {setCurrShapeRotation}/>
+                    ))} 
+                    </vstack>
+                ))}
+                </hstack>
+                <button onPress={() => {submit(data)}}>Submit</button>
+            </vstack>
+            <vstack gap="small" height="100%" alignment="center middle">
+                <Canvas />
+                <ColorSelector />
+            </vstack>
+        </hstack>
    )
 }

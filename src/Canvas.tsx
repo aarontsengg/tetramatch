@@ -1,17 +1,6 @@
 import {Devvit, useState} from '@devvit/public-api'
 import { Pixel } from './classes/PixelClass.js';
-import { shapes, GridPresets } from './classes/DataPresets.js';
-
-const colors = [
-  "#FFFFFF",
-  "#000000",
-  "#EB5757",
-  "#F2994A",
-  "#F2C94C",
-  "#27AE60",
-  "#2F80ED",
-  "#9B51E0"
-];
+import { shapes, GridPresets, colors } from './classes/DataPresets.js';
 const size = 16;
 // must define these hooks in the exported function... 
 // grid get and set 
@@ -36,8 +25,9 @@ type shapeCanvasProps = {
     presetID: number;
     currShapeID: number;
     setCurrShapeID: (arg: number) => void;
+    setCurrShapeRotation: (arg: number) => void;
 }
-export const ShapeCanvas = ({presetID, currShapeID, setCurrShapeID}: shapeCanvasProps) => {
+export const ShapeCanvas = ({presetID, currShapeID, setCurrShapeID, setCurrShapeRotation}: shapeCanvasProps) => {
     const [numRotations, setNumRotations] = useState(0); // this is numRotations
 
     function rotateImage(resolution: number, rows: number, data: Pixel[]): Pixel[]{
@@ -58,7 +48,7 @@ export const ShapeCanvas = ({presetID, currShapeID, setCurrShapeID}: shapeCanvas
     }
     // setup shapes and grid 
     var preset = GridPresets[presetID];
-    var [anchorX, anchorY, numRow, resolution, shapeID] = [preset.anchorX, preset.anchorY, preset.rows, preset.cols, preset.shapeID];
+    var [anchorX, anchorY, numRow, resolution, shapeID, allowRotate] = [preset.anchorX, preset.anchorY, preset.rows, preset.cols, preset.shapeID, preset.allowRotate];
     
     if (numRotations % 2 == 1) {
         var tmp = resolution;
@@ -70,7 +60,6 @@ export const ShapeCanvas = ({presetID, currShapeID, setCurrShapeID}: shapeCanvas
     for (let i = 0; i < numRow; i++) {
         for (let j = 0; j < resolution; j++) {
             blankCanvas[i * resolution + j] = new Pixel({x: i, y: j});
-            //console.log("colour",i,j, blankCanvas[i * resolution + j].color);
         }
     }
 
@@ -81,7 +70,6 @@ export const ShapeCanvas = ({presetID, currShapeID, setCurrShapeID}: shapeCanvas
         let [x, y] = pieces[i]; // array destructuring, yay... 
         blankCanvas[(x + anchorX) * resolution + (y + anchorY)] = new Pixel({x: x, y: y, color:1});
         // we need to do this add anchorX and anchorY thing
-        //setPixel(blankCanvas, resolution, x, y, new Pixel({x:x, y:y, color:parseInt(colors[2].slice(1), 16)}));
     }
     // shape canvas properties 
     const [data, setData] = useState(blankCanvas);
@@ -115,13 +103,22 @@ export const ShapeCanvas = ({presetID, currShapeID, setCurrShapeID}: shapeCanvas
                 height={getGridSide(numRow, size)}
                 width={getGridSide(resolution, size)}
                 onPress={() => {
-                    if (currShapeID === shapeID) {console.log("Already Selected: Rotate Time!");
+                    // BUG OR INTENDED? numRotations doesn't actually update using setNumRotations until the whole onPress has executed
+                    // thus, if you do setNumRotations(numRotations + 1) and then print(numRotations), it'll print the old value
+                    if (currShapeID === shapeID) { // we have previously selected this shape 
                         let mat = rotateImage(resolution, numRow, data);
-                        setNumRotations((numRotations + 1) % 4); // increment numRotations by 1 
+                        setNumRotations((numRotations + 1) % shapes[shapeID].period); // increment numRotations by 1 
+                        setCurrShapeRotation((numRotations + 1) % shapes[shapeID].period); // always modulo by rotation period
+                        // increment currShapeRotation manually as well because of BUG mentioned above 
+
                         setData(mat);
                         
                     }
-                    else setCurrShapeID(shapeID);
+                    else {
+                        setCurrShapeID(shapeID);
+                        setCurrShapeRotation(numRotations); // at the end, set the number of rotations
+                        // note, we need this setCurrShapeRotations in the else statement, because of BUG mentioned above 
+                    }
                 }}
 
                 >
