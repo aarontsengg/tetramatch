@@ -1,9 +1,8 @@
 {
   "private": true,
-  "name": "tetris-tangram",
+  "name": "tetramatch",
   "version": "0.0.0",
   "license": "BSD-3-Clause",
-  "type": "module",
   "scripts": {
     "build": "tsc",
     "start": "ts-node src/main.tsx"
@@ -11,7 +10,8 @@
   "dependencies": {
     "@devvit/public-api": "0.11.3",
     "mongodb": "^6.11.0",
-    "mongoose": "^8.8.4"
+    "mongoose": "^8.8.4",
+    "ts-node": "^10.9.2"
   },
   "devDependencies": {
     "@types/node": "^22.10.1",

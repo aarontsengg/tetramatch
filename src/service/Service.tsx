@@ -6,7 +6,9 @@ export class Service {
     const puzzle = await Puzzle.findOne({ puzzleId }).lean();
     return puzzle || null;
   }
-
+  testFunc(soln: number): void {
+    console.log("Hello world!!!!", soln);
+  }
   async validateSolution(userSolution: number[][], puzzleId: string): Promise<boolean> {
 /*************  ✨ Codeium Command ⭐  *************/
   /**

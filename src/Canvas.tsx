@@ -48,7 +48,7 @@ export const ShapeCanvas = ({presetID, currShapeID, setCurrShapeID, setCurrShape
     }
     // setup shapes and grid 
     var preset = GridPresets[presetID];
-    var [anchorX, anchorY, numRow, resolution, shapeID, allowRotate] = [preset.anchorX, preset.anchorY, preset.rows, preset.cols, preset.shapeID, preset.allowRotate];
+    var [anchorX, anchorY, numRow, resolution, shapeID] = [preset.anchorX, preset.anchorY, preset.rows, preset.cols, preset.shapeID];
     
     if (numRotations % 2 == 1) {
         var tmp = resolution;

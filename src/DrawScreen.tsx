@@ -3,7 +3,7 @@ import { ShapeCanvas } from './Canvas.js';
 import { ShapeType } from './classes/ShapeType.js';
 import { Pixel } from './classes/PixelClass.js';
 import { shapes, colors, GridPresets} from './classes/DataPresets.js';
-
+import { Service } from './service/Service.js';
 
 const resolution = 8;
 const size = 32;
@@ -181,6 +181,10 @@ export const DrawScreen = ({setPage}: DrawScreenProps) => {
             }
             console.log(s);
         }
+        // whoops I need to docker build and import Mongo DB
+        // create the return array here 
+        var service = new Service();
+        service.testFunc(100);
     }
     const Canvas = () => (
         <vstack
