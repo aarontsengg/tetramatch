@@ -18,7 +18,8 @@ export class Service {
    * @param puzzleId - The ID of the puzzle to validate against.
    * @returns `true` if the user's solution matches the puzzle's solution; otherwise, `false`.
    */
-/******  cbf5d31c-b842-436c-ab73-82ea46217742  *******/    const puzzle = await this.getPuzzleData(puzzleId);
+/******  cbf5d31c-b842-436c-ab73-82ea46217742  *******/   
+    const puzzle = await this.getPuzzleData(puzzleId);
     if (!puzzle) return false;
 
     return JSON.stringify(userSolution) === JSON.stringify(puzzle.pixels);
