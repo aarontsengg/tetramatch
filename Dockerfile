@@ -1,26 +1,35 @@
-# Use an official Node.js runtime as the base image
-FROM node:18-alpine
+# Stage 1: Build
+FROM node:18-alpine AS builder
 
-# Set the working directory in the container
 WORKDIR /app
 
-# Copy package.json and package-lock.json (if available)
+# Copy package files and install dependencies
 COPY package*.json ./
-
-# Install dependencies, including Devvit
 RUN npm install
 
-# Copy the rest of the application code
+# Copy source code and build
 COPY . .
-
-# Build the TypeScript code
 RUN npm run build
 
-# Expose the port your app runs on
+# Stage 2: Production
+FROM node:18-alpine
+
+WORKDIR /app
+
+# Copy package files and install only production dependencies
+COPY package*.json ./
+RUN npm install --only=production
+
+# Copy built files and data from builder stage
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/data ./data
+COPY --from=builder /app/devvit.yaml ./devvit.yaml 
+
+# Expose the application port
 EXPOSE 3000
 
-# Set environment variables (override with docker-compose or .env)
+# Set environment variables
 ENV NODE_ENV=production
 
 # Start the application
-CMD ["npm", "start"]
+CMD ["node", "dist/index.js"]

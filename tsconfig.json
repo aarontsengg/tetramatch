@@ -11,6 +11,8 @@
     "allowJs": true,
     "jsx": "react",
     "types": ["node"],
+    "resolveJsonModule": true,
+    "esModuleInterop": true
   },
   "exclude": [
     "./node_modules/**/*"
