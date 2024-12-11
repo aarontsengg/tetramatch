@@ -6,9 +6,6 @@ export class Service {
     const puzzle = await Puzzle.findOne({ puzzleId }).lean();
     return puzzle || null;
   }
-  testFunc(soln: number): void {
-    console.log("Hello world!!!!", soln);
-  }
   async validateSolution(userSolution: number[][], puzzleId: string): Promise<boolean> {
 /*************  ✨ Codeium Command ⭐  *************/
   /**
@@ -21,7 +18,10 @@ export class Service {
 /******  cbf5d31c-b842-436c-ab73-82ea46217742  *******/   
     const puzzle = await this.getPuzzleData(puzzleId);
     if (!puzzle) return false;
-
+    //console.log("They are the same:", JSON.stringify(userSolution) === JSON.stringify(puzzle.pixels));
+    //console.log(JSON.stringify(userSolution))
+    //console.log();
+    //console.log(JSON.stringify(puzzle.pixels))
     return JSON.stringify(userSolution) === JSON.stringify(puzzle.pixels);
   }
 }

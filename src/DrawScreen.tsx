@@ -173,18 +173,19 @@ export const DrawScreen = ({setPage}: DrawScreenProps) => {
     function submit(data: Pixel[]): void {
         // Query Reddit API for username/userID
         console.log("Submitted by {username}");
+        var arr = Array.from({ length: resolution }, () => new Array(resolution).fill(0));
         for (let i = 0; i < resolution; i++) {
             let s = '';
             for (let j = 0; j < resolution; j++) {
                 let dat = data[i * resolution + j]
                 s = s.concat(`${dat.color}|${dat.id}\t`);
+                arr[i][j] = dat.color;
             }
             console.log(s);
         }
-        // whoops I need to docker build and import Mongo DB
-        // create the return array here 
         var service = new Service();
-        service.testFunc(100);
+        let res = service.validateSolution(arr, "puzzle1");
+        console.log("result", res);
     }
     const Canvas = () => (
         <vstack

@@ -2,7 +2,7 @@
   "extends": "@devvit/public-api/devvit.tsconfig.json",
   "compilerOptions": {
     "target": "es6",
-    "module": "CommonJS",
+    "module": "commonjs",
     "moduleResolution": "node",
     "noResolve": false,
     "noImplicitAny": false,
