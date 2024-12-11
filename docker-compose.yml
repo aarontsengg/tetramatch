@@ -1,4 +1,5 @@
 version: '3.8'
+
 services:
   app:
     build: .
@@ -6,28 +7,11 @@ services:
       - "3000:3000"
     env_file:
       - .env
-    depends_on:
-      mongodb:
-        condition: service_healthy
     networks:
       - app-network
     volumes:
       - .:/app
       - /app/node_modules
-
-  mongodb:
-    image: mongo:latest
-    ports:
-      - "27017:27017"
-    volumes:
-      - ./data/db:/data/db
-    networks:
-      - app-network
-    healthcheck:
-      test: ["CMD", "mongo", "--eval", "db.runCommand({ ping: 1 })"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
 
 networks:
   app-network:
