@@ -1,9 +1,9 @@
 import {Devvit, useState} from '@devvit/public-api'
 import { ShapeCanvas } from './Canvas.js';
-import { ShapeType } from './classes/ShapeType.js';
-import { Pixel } from './classes/PixelClass.js';
-import { shapes, colors, GridPresets} from './classes/DataPresets.js';
-import { Service } from './service/Service.js';
+import { ShapeType } from '../classes/ShapeType.js';
+import { Pixel } from '../classes/PixelClass.js';
+import { shapes, colors, GridPresets} from '../classes/DataPresets.js';
+import { Service } from '../service/Service.js';
 
 const resolution = 8;
 const size = 32;
@@ -37,8 +37,9 @@ function setPixel<T>(array: T[], resolution:number, x: number, y:number, value: 
 
 type DrawScreenProps = {
   setPage: (page: string) => void;
+  context: Devvit.Context;
 }
-export const DrawScreen = ({setPage}: DrawScreenProps) => {
+export const DrawScreen = ({setPage, context}: DrawScreenProps) => {
     var defBackColor = "#FCFAE8";
     const [activeColor, setActiveColor] = useState(defaultColor);
     const [data, setData] = useState(blankCanvas);
@@ -170,7 +171,7 @@ export const DrawScreen = ({setPage}: DrawScreenProps) => {
         }
         return result;
     }
-    function submit(data: Pixel[]): void {
+    function submit(data: Pixel[], context: Devvit.Context): void {
         // Query Reddit API for username/userID
         console.log("Submitted by {username}");
         var arr = Array.from({ length: resolution }, () => new Array(resolution).fill(0));
@@ -183,9 +184,16 @@ export const DrawScreen = ({setPage}: DrawScreenProps) => {
             }
             console.log(s);
         }
+        var arr2 = Array(resolution * resolution).fill(0);
+        for (let i = 0; i < data.length; i++) arr2[i] = data[i].color;
+        console.log(arr2);
         var service = new Service();
         let res = service.validateSolution(arr, "puzzle1");
         console.log("result", res);
+        context.ui.showToast({text: "Submitted!", appearance: 'success'});
+        let success = 1; // always set to 1 for now, else set to res once res is working
+        if (success) context.ui.showToast("Success set to 1 for debug purposes");
+        //if (success) setPage("WinScreen"); // switch page if successful 
     }
     const Canvas = () => (
         <vstack
@@ -219,31 +227,35 @@ export const DrawScreen = ({setPage}: DrawScreenProps) => {
         </vstack>
     );
    return (
-        <hstack height="100%" padding='small' gap='small' alignment = 'center middle'>
-            <vstack gap="small" height="100%" alignment="center middle">
-                <Eraser />
-                <hstack
-                cornerRadius="small"
-                border="thin"
-                >
-                {splitArray(GridPresets, Math.ceil(GridPresets.length / 2)).map((GP, row) => (
-                    <vstack gap='small'>
-                    {GP.map((unused, index) => (
-                        <ShapeCanvas 
-                        presetID = {row * Math.ceil(GridPresets.length / 2) + index } 
-                        currShapeID = {currShapeID} 
-                        setCurrShapeID = {setCurrShapeID} 
-                        setCurrShapeRotation = {setCurrShapeRotation}/>
-                    ))} 
-                    </vstack>
-                ))}
-                </hstack>
-                <button onPress={() => {submit(data)}}>Submit</button>
-            </vstack>
-            <vstack gap="small" height="100%" alignment="center middle">
-                <Canvas />
-                <ColorSelector />
-            </vstack>
-        </hstack>
+        <vstack width = "100%" height = "100%" alignment='center middle'>
+            <hstack height="100%" padding='small' gap='small' alignment = 'center middle'>
+                <vstack gap="small" height="100%" alignment="center middle">
+                    <Eraser />
+                    <hstack
+                    cornerRadius="small"
+                    border="thin"
+                    >
+                    {splitArray(GridPresets, Math.ceil(GridPresets.length / 2)).map((GP, row) => (
+                        <vstack gap='small'>
+                        {GP.map((unused, index) => (
+                            <ShapeCanvas 
+                            presetID = {row * Math.ceil(GridPresets.length / 2) + index } 
+                            currShapeID = {currShapeID} 
+                            setCurrShapeID = {setCurrShapeID} 
+                            setCurrShapeRotation = {setCurrShapeRotation}/>
+                        ))} 
+                        </vstack>
+                    ))}
+                    </hstack>
+                    <button onPress={() => {submit(data, context)}}> Submit </button>
+
+                </vstack>
+                <vstack gap="small" height="100%" alignment="center middle">
+                    <Canvas />
+                    <ColorSelector />
+                </vstack>
+            </hstack>
+        </vstack>
+    
    )
 }

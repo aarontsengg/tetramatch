@@ -1,6 +1,6 @@
 import {Devvit, useState} from '@devvit/public-api'
-import { Pixel } from './classes/PixelClass.js';
-import { shapes, GridPresets, colors } from './classes/DataPresets.js';
+import { Pixel } from '../classes/PixelClass.js';
+import { shapes, GridPresets, colors } from '../classes/DataPresets.js';
 const size = 16;
 // must define these hooks in the exported function... 
 // grid get and set 
