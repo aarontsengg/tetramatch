@@ -40,7 +40,7 @@ type DrawScreenProps = {
   context: Devvit.Context;
 }
 export const DrawScreen = ({setPage, context}: DrawScreenProps) => {
-    var defBackColor = "#FCFAE8";
+    var defBackColor = ["#FCFAE8","#CFC995" ];
     const [activeColor, setActiveColor] = useState(defaultColor);
     const [data, setData] = useState(blankCanvas);
 
@@ -153,7 +153,7 @@ export const DrawScreen = ({setPage, context}: DrawScreenProps) => {
         }}
         height={`${size}px`}
         width={`${size}px`}
-        backgroundColor={pixel.color != -1 ? colors[pixel.color] : defBackColor} // use -1 for default background color
+        backgroundColor={pixel.color != -1 ? colors[pixel.color] : defBackColor[((index % resolution) + Math.floor(index / resolution)) % 2]} // use -1 for default background color
         />
     ));
     
