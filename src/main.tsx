@@ -6,6 +6,7 @@ import {DrawScreen} from './DrawScreen.js';
 
 Devvit.configure({
   redditAPI: true,
+  redis: true
 });
 
 
