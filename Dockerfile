@@ -1,35 +1,27 @@
-# Stage 1: Build
-FROM node:18-alpine AS builder
+# Use official Node.js LTS image
+FROM node:18-alpine
 
+# Set working directory
 WORKDIR /app
 
-# Copy package files and install dependencies
+# Install dependencies
 COPY package*.json ./
 RUN npm install
 
-# Copy source code and build
-COPY . .
-RUN npm run build
+# Copy source code
+COPY src ./src
 
-# Stage 2: Production
-FROM node:18-alpine
+# Install TypeScript globally if not already installed
+RUN npm install -g typescript
 
-WORKDIR /app
+# Install @types/redis
+RUN npm install --save-dev @types/redis
 
-# Copy package files and install only production dependencies
-COPY package*.json ./
-RUN npm install --only=production
+# Build TypeScript files
+RUN tsc
 
-# Copy built files and data from builder stage
-COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/data ./data
-COPY --from=builder /app/devvit.yaml ./devvit.yaml 
+# Expose backend port
+EXPOSE 4000
 
-# Expose the application port
-EXPOSE 3000
-
-# Set environment variables
-ENV NODE_ENV=production
-
-# Start the application
+# Start the backend server
 CMD ["node", "dist/index.js"]

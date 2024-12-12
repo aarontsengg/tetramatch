@@ -10,6 +10,7 @@ import { StatementSync } from 'node:sqlite';
 import { Navigator } from './Screens/Navigator.js';
 Devvit.configure({
   redditAPI: true,
+  redis: true
 });
 
 
