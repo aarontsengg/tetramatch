@@ -34,6 +34,17 @@ export const ShapeCanvas = ({presetID, currShapeID, setCurrShapeID, setCurrShape
         let n = rows;
         let m = resolution;
         let nxt = new Array(resolution * rows).fill(null);
+
+        // edge case, single row 
+        if (n === 1) {
+            for (let j = m - 1; j > -1; j -= 1) setPixel(nxt, n, 0, j, getPixel(data, n, 0, j));
+            return nxt;
+        }
+        //edge case, single column 
+        if (m === 1) {
+            for (let i = n - 1; i > -1; i -= 1) setPixel(nxt, m, i, 0, getPixel(data, m, i, 0));
+            return nxt;
+        }
         let n2 = (n % 2 == 0) ? ((n / 2) | 0) : ((n / 2) | 0) + 1  
         let m2 = (m % 2 == 0) ? ((m / 2) | 0) : ((m / 2) | 0) + 1  
         for (let i = 0; i < n2; i++) {
@@ -73,7 +84,7 @@ export const ShapeCanvas = ({presetID, currShapeID, setCurrShapeID, setCurrShape
     }
     // shape canvas properties 
     const [data, setData] = useState(blankCanvas);
-
+    console.log(shapeID, data);
     // this builds it such that the true gridSize pixels wise is found after the resolution and size per pixel is specified 
     // what would be nice is if the size per pixel could be found from a specified resolution and gridSize. 
     function getGridSide(resolution: number, size: number): Devvit.Blocks.SizeString | undefined {

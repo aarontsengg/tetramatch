@@ -2,17 +2,11 @@ import {Devvit, useState} from '@devvit/public-api'
 import { ShapeCanvas } from './Canvas.js';
 import { ShapeType } from '../classes/ShapeType.js';
 import { Pixel } from '../classes/PixelClass.js';
-import { shapes, colors, GridPresets} from '../classes/DataPresets.js';
-import { Service } from '../service/Service.js';
+import { shapes, colors, GridPresets, altColors} from '../classes/DataPresets.js';
+import {Puzzle, PuzzleService } from '../service/Service.js';
 
 const resolution = 8;
 const size = 32;
-const blankCanvas = new Array(resolution * resolution).fill(new Pixel());
-for (let i = 0; i < resolution; i++) {
-    for (let j = 0; j < resolution; j++) {
-        blankCanvas[i * 8 + j] = new Pixel({x: i, y: j});
-    }
-}
 const defaultColor = 1;
 //const { useState } = context;
 // must define these hooks in the exported function... 
@@ -38,8 +32,16 @@ function setPixel<T>(array: T[], resolution:number, x: number, y:number, value: 
 type DrawScreenProps = {
   setPage: (page: string) => void;
   context: Devvit.Context;
+  setImageData: (img: number[]) => void;
+  solnImg: number[];
 }
-export const DrawScreen = ({setPage, context}: DrawScreenProps) => {
+export const DrawScreen = ({setPage, context, setImageData, solnImg}: DrawScreenProps) => {
+    const blankCanvas = new Array(resolution * resolution).fill(new Pixel());
+    for (let i = 0; i < resolution; i++) {
+        for (let j = 0; j < resolution; j++) {
+            blankCanvas[i * 8 + j] = new Pixel({x: i, y: j});
+        }
+    }
     var defBackColor = ["#FCFAE8","#CFC995" ];
     const [activeColor, setActiveColor] = useState(defaultColor);
     const [data, setData] = useState(blankCanvas);
@@ -138,6 +140,14 @@ export const DrawScreen = ({setPage, context}: DrawScreenProps) => {
         return 1;
 
     }
+    function getBackgroundColor(pixel, index): string {
+        let colorID = pixel.color
+        if (colorID != -1) return colors[colorID];
+        // check soln layer first
+        if (solnImg[pixel.x * resolution + pixel.y] != -1) return altColors[solnImg[pixel.x * resolution + pixel.y]] 
+        // fix last layer 
+        return defBackColor[((index % resolution) + Math.floor(index / resolution)) % 2]
+    }
     const pixels = data.map((pixel, index) => (
         <hstack
         onPress={() => {
@@ -153,7 +163,7 @@ export const DrawScreen = ({setPage, context}: DrawScreenProps) => {
         }}
         height={`${size}px`}
         width={`${size}px`}
-        backgroundColor={pixel.color != -1 ? colors[pixel.color] : defBackColor[((index % resolution) + Math.floor(index / resolution)) % 2]} // use -1 for default background color
+            backgroundColor={getBackgroundColor(pixel, index)} // use -1 for default background color
         />
     ));
     
@@ -187,13 +197,22 @@ export const DrawScreen = ({setPage, context}: DrawScreenProps) => {
         var arr2 = Array(resolution * resolution).fill(0);
         for (let i = 0; i < data.length; i++) arr2[i] = data[i].color;
         console.log(arr2);
-        var service = new Service();
-        let res = service.validateSolution(arr, "puzzle1");
-        console.log("result", res);
+        //var service = new PuzzleService();
+        //let res = service.validateSolution(arr, "puzzle1")
+        //console.log("result", res);
         context.ui.showToast({text: "Submitted!", appearance: 'success'});
         let success = 1; // always set to 1 for now, else set to res once res is working
         if (success) context.ui.showToast("Success set to 1 for debug purposes");
-        //if (success) setPage("WinScreen"); // switch page if successful 
+        setImageData(arr2);
+        if (success) setPage("WinScreen"); // switch page if successful 
+        /*const myPuzzle: Puzzle = {
+            puzzleId: "puzzle1",
+            width: arr.length,
+            height: arr[0].length,
+            pixels: arr,
+          };
+        let success2 = service.addPuzzle(myPuzzle) // puzzle test lolol
+        console.log("Puzzle added???????", success2)*/
     }
     const Canvas = () => (
         <vstack

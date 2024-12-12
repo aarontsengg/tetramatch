@@ -5,7 +5,8 @@ import { CounterScreen } from './Screens/CounterScreen.js';
 import {DrawScreen} from './Screens/DrawScreen.js';
 import { WinScreen } from './Screens/WinScreen.js';
 import { DisplayScreen } from './Screens/DisplayScreen.js';
-
+import { GuessPost } from './Screens/GuessPost.js';
+import { StatementSync } from 'node:sqlite';
 Devvit.configure({
   redditAPI: true,
 });
@@ -48,7 +49,13 @@ Devvit.addCustomPostType({
   render: (_context) => {
     const [counter, setCounter] = useState(0);
     const [page, setPage] = useState('a');
-
+    const [resolution, setResolution] = useState(8); // set to 8x8 by default 
+    let tst = Array(resolution * resolution).fill(-1)
+    // so right now, we have it so that imageData is being sent to currentPage as a solution
+    // this means after creating something, we'll see its afterimage the next time. 
+    // Is this a feature, or a bug? 
+    // we could do it such that GuessPost only alters a new hook called solutionData, but I want to test this approach first 
+    const [imageData, setImageData] = useState(tst)
     let currentPage;
     switch (page) {
       case 'startScreen':
@@ -56,10 +63,10 @@ Devvit.addCustomPostType({
         break;
       case 'drawScreen':
         //currentPage = <CounterScreen setPage={setPage} setCounter={setCounter} counter={counter}/>;
-        currentPage = <DrawScreen setPage={setPage} context={_context}/>
+        currentPage = <DrawScreen setPage={setPage} context={_context} setImageData={setImageData} solnImg={imageData}/>
         break;
       case 'WinScreen':
-        currentPage = <WinScreen /> // note that there is no parameter, and you're stuck on the win screen lol 
+        currentPage = <WinScreen data={imageData} resolution={resolution} setPage={setPage}/> // note that there is no parameter, and you're stuck on the win screen lol 
         break;
       case 'DisplayScreen':
         // start with a 2D array 
@@ -90,6 +97,7 @@ Devvit.addCustomPostType({
         break;
       default:
         currentPage = <StartScreen setPage={setPage} />;
+        //currentPage = <GuessPost data={imageData} resolution={resolution} setPage={setPage} setImageData={setImageData}/>;
         //currentPage = <DisplayScreen resolution={8} data={pix2}/>;
 
     }

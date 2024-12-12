@@ -16,7 +16,6 @@ type DisplayScreenProps = {
 }
 // literally all this does is display the picutre. Nothing else. 
 export const DisplayScreen = ({data, resolution}: DisplayScreenProps) => {
-    console.log("In display screen rn");
     var defBackColor = "#FCFAE8"; // default background color 
     // we have no hooks, because nothing changes. This is static         
     const pixels = data.map((pixColor) => (
@@ -53,8 +52,7 @@ export const DisplayScreen = ({data, resolution}: DisplayScreenProps) => {
     );
    return (
 
-        <vstack gap="small" height="100%" alignment="center middle">
-            <text> Picture lolol </text>
+        <vstack gap="small" alignment="center middle">
             <Canvas />
         </vstack>
    )
