@@ -84,7 +84,6 @@ export const ShapeCanvas = ({presetID, currShapeID, setCurrShapeID, setCurrShape
     }
     // shape canvas properties 
     const [data, setData] = useState(blankCanvas);
-    console.log(shapeID, data);
     // this builds it such that the true gridSize pixels wise is found after the resolution and size per pixel is specified 
     // what would be nice is if the size per pixel could be found from a specified resolution and gridSize. 
     function getGridSide(resolution: number, size: number): Devvit.Blocks.SizeString | undefined {
