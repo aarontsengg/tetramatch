@@ -17,7 +17,6 @@ Devvit.configure({
 Devvit.addCustomPostType({
   name: 'Experience Post',
   height: 'tall',
-  
   render: (_context) => {
     return (
         <Navigator _context={_context}/>

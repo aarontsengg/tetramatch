@@ -1,17 +1,40 @@
-import { Devvit, useState } from "@devvit/public-api";
+import { Devvit, useState, useAsync } from "@devvit/public-api";
 import { StartScreen } from "./startScreen";
 import { DrawScreen } from "./DrawScreen";
 import { WinScreen } from "./WinScreen";
 import { DisplayScreen } from "./DisplayScreen";
 import { GuessPost } from "./GuessPost";
+import { LoadingScreen } from "./loadingScreen";
 type NavigatorType = {
     _context: Devvit.Context;
 }
 export const Navigator = ({_context}: NavigatorType) => {
-
+    const [author, setAuthor] = useState(""); // empty author for start 
     const [counter, setCounter] = useState(0);
     const [page, setPage] = useState('a');
     const [resolution, setResolution] = useState(8); // set to 8x8 by default 
+
+    var targetAuthor = "gridlock-game2"
+
+    const { data: nameAuthor, loading, error } = useAsync(async () => {
+        // Make your Reddit API call here
+        var nameAuthor = await logAuthor();
+        return nameAuthor;
+    });
+    function configureGuessPost(): void {
+        // basically query for the guess post and actually display it 
+        setPage("GuessPost");
+
+    }
+    if (nameAuthor && !loading && !error) {
+        if (nameAuthor === targetAuthor) {
+            console.log("LETS GOOOOO");
+            setPage('startScreen'); 
+        } else {
+            console.log("nonspecific username", nameAuthor);
+        }
+    }
+
     let tst = Array(resolution * resolution).fill(-1)
     // so right now, we have it so that imageData is being sent to currentPage as a solution
     // this means after creating something, we'll see its afterimage the next time. 
@@ -61,14 +84,47 @@ export const Navigator = ({_context}: NavigatorType) => {
         currentPage = <GuessPost data={imageData} resolution={resolution} setPage={setPage} setImageData={setImageData}/>;
         break;
       default:
-        currentPage = <StartScreen setPage={setPage} />;
+        //currentPage = <StartScreen setPage={setPage} />;
+        currentPage = <LoadingScreen />
+        //configurePage(); // change page to other thing 
         //currentPage = <GuessPost data={imageData} resolution={resolution} setPage={setPage} setImageData={setImageData}/>;
         //currentPage = <DisplayScreen resolution={8} data={pix2}/>;
 
     }
+    async function logAuthor() {
+        const postId = _context.postId ? _context.postId : "";
+        var nameAuthor = "";
+        try {
+            const post = await _context.reddit.getPostById(postId);
+            console.log(`The current post's author is: ${post?.authorName}`);
+            nameAuthor = post?.authorName;
+            //setAuthor(nameAuthor);
+        } catch (error) {
+            console.error("Error fetching user:", error);
+        }
+        return nameAuthor;
+    }
+    function configurePage() {
+        logAuthor()
+        .then((result) => {
+            if (result === targetAuthor) {
+                setPage("startScreen");
+            } else {
+                setPage("DisplayScreen");
+            }
+        })
+        .catch((error) => console.error("Error:", error));
+    }
+    //logAuthor(); // logs the author to begin 
     return (
         <blocks>
+            <button onPress={ () => {
+                //setPage("GuessPost")
+                console.log("Do nothing!!!");
+            }}
+            > Press me 
+            </button> 
             {currentPage}
-        </blocks>
+        </blocks> 
     );
 }
