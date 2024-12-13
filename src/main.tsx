@@ -40,7 +40,7 @@ Devvit.addMenuItem({
     const utcCurrentDate = Date.UTC(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate());
     const diffTime = utcCurrentDate - utcStartDate;
     const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1; // +1 to start counting from Tetramatch 1
-    const postTitle = `Tetramatch ${diffDays}`;
+    const postTitle = `Create Tetramatch! ${diffDays}`;
     await reddit.submitPost({
       title: postTitle,
       subredditName: subreddit.name,
@@ -54,32 +54,15 @@ Devvit.addMenuItem({
     ui.showToast({ text: 'Created post!' });
   },
 });
-
-/*Devvit.addCustomPostType({
-  name: 'CreatePostButton',
-  render: (context) => {
-    return (
-      <vstack>
-        <button
-          onPress={async () => {
-            const subreddit = await context.reddit.getCurrentSubreddit();
-            await context.reddit.submitPost({
-              title: 'My new post',
-              subredditName: subreddit.name,
-              preview: (
-                <vstack>
-                  <text>Loading ...</text>
-                </vstack>
-              ),
-            });
-            context.ui.showToast('Created post!');
-          }}
-        >
-          Create Post
-        </button>
-      </vstack>
-    );
+Devvit.addMenuItem({
+  location: 'subreddit',
+  label: 'Test Redis',
+  onPress: async (event, { redis }) => {
+    const key = 'hello';
+    await redis.set(key, 'world');
+    const value = await redis.get(key);
+    console.log(`${key}: ${value}`);
   },
-});*/ // only one post type allowed per project lol 
+});
 
 export default Devvit;

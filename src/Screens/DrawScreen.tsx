@@ -3,8 +3,7 @@ import { ShapeCanvas } from './Canvas.js';
 import { ShapeType } from '../classes/ShapeType.js';
 import { Pixel } from '../classes/PixelClass.js';
 import { shapes, colors, GridPresets, altColors} from '../classes/DataPresets.js';
-import {Puzzle, PuzzleService } from '../service/Service.js';
-
+import { Puzzle, Service } from '../services/Service.js';
 const resolution = 8;
 const size = 32;
 const defaultColor = 1;
@@ -181,7 +180,56 @@ export const DrawScreen = ({setPage, context, setImageData, solnImg}: DrawScreen
         }
         return result;
     }
-    function submit(data: Pixel[], context: Devvit.Context): void {
+    function genID(): number {
+        return Math.floor(Math.random() * 1000000000000000000) // 10 ** 18 btw
+    }
+    async function createPuzzle(context: Devvit.Context, service: Service, width: number, height: number, pixels: number[][]) {
+        let ret = -1; // return the unique identifier 
+        console.log("Async function...")
+        var puzzleId = genID()
+        console.log("Unique puzzle ID:", puzzleId)
+        var userID = context.userId ? context.userId : ""
+        var timeCreated = Math.floor(Date.now() / 1000); // seconds since 1970 jan 1
+        var tmpPuzzle: Puzzle = {
+            puzzleId: puzzleId,
+            width: width,
+            height: height,
+            pixels: pixels,
+            userId: parseInt(userID),
+            createdAt: timeCreated.toString()
+        }
+        let success = await service.addNewPuzzle(tmpPuzzle);
+        console.log("Success?", success);
+        if (success) {
+            ret = puzzleId;
+            let gPuzzle = await service.getPuzzle(puzzleId);
+            if (gPuzzle) {
+                console.log("Got puzzle successfully!")
+                console.log(gPuzzle.pixels);
+            } else {
+                console.log("Puzzle: ", puzzleId, "failed to retrieve")
+            }
+        } else {
+            console.log("Set puzzle fail");
+        }
+        return ret
+
+        /**
+         * 
+         * interface Puzzle {
+            puzzleId: number;
+            userId: number; 
+            createdAt: string;
+            width: number;
+            height: number;
+            pixels: number[][];
+            }
+         */
+    }
+    function validate(data: Pixel[], context: Devvit.Context) {
+
+    }
+    async function submit(data: Pixel[], context: Devvit.Context) {
         // Query Reddit API for username/userID
         console.log("Submitted by {username}");
         var arr = Array.from({ length: resolution }, () => new Array(resolution).fill(0));
@@ -197,22 +245,40 @@ export const DrawScreen = ({setPage, context, setImageData, solnImg}: DrawScreen
         var arr2 = Array(resolution * resolution).fill(0);
         for (let i = 0; i < data.length; i++) arr2[i] = data[i].color;
         console.log(arr2);
-        //var service = new PuzzleService();
+        var service = new Service(context);
+        // [TypeError: (void 0) is not a constructor]
+        console.log("Object object lolol with maybe object promise???", service)
+        var puzzleID = await createPuzzle(context, service, resolution, resolution, arr); // async function, returns puzzle ID, no dependencies 
         //let res = service.validateSolution(arr, "puzzle1")
         //console.log("result", res);
+        let success2 = await createPost(puzzleID, context)
+        if (success2) console.log("Yay, you created a post!")
         context.ui.showToast({text: "Submitted!", appearance: 'success'});
         let success = 1; // always set to 1 for now, else set to res once res is working
         if (success) context.ui.showToast("Success set to 1 for debug purposes");
         setImageData(arr2);
         if (success) setPage("WinScreen"); // switch page if successful 
-        /*const myPuzzle: Puzzle = {
-            puzzleId: "puzzle1",
-            width: arr.length,
-            height: arr[0].length,
-            pixels: arr,
-          };
-        let success2 = service.addPuzzle(myPuzzle) // puzzle test lolol
-        console.log("Puzzle added???????", success2)*/
+    }
+    async function createPost(puzzleID: number, context: Devvit.Context) {
+        try {
+
+            const subreddit = await context.reddit.getCurrentSubreddit();
+
+            await context.reddit.submitPost({
+            title: puzzleID.toString(),
+            subredditName: subreddit.name,
+            preview: (
+                <vstack>
+                <text>Loading ...</text>
+                </vstack>
+            ),
+            });
+            context.ui.showToast('Created post!');
+        } catch (error) {
+            console.log("Failed to create post:", error)
+            return false;
+        }
+        return true
     }
     const Canvas = () => (
         <vstack
@@ -247,33 +313,36 @@ export const DrawScreen = ({setPage, context, setImageData, solnImg}: DrawScreen
     );
    return (
         <vstack width = "100%" height = "100%" alignment='center middle'>
-            <hstack height="100%" padding='small' gap='small' alignment = 'center middle'>
-                <vstack gap="small" height="100%" alignment="center middle">
-                    <Eraser />
-                    <hstack
-                    cornerRadius="small"
-                    border="thin"
-                    >
-                    {splitArray(GridPresets, Math.ceil(GridPresets.length / 2)).map((GP, row) => (
-                        <vstack gap='small'>
-                        {GP.map((unused, index) => (
-                            <ShapeCanvas 
-                            presetID = {row * Math.ceil(GridPresets.length / 2) + index } 
-                            currShapeID = {currShapeID} 
-                            setCurrShapeID = {setCurrShapeID} 
-                            setCurrShapeRotation = {setCurrShapeRotation}/>
-                        ))} 
-                        </vstack>
-                    ))}
-                    </hstack>
-                    <button onPress={() => {submit(data, context)}}> Submit </button>
+            <vstack>
+                <hstack height="100%" padding='small' gap='small' alignment = 'center middle'>
+                    <vstack gap="small" alignment="center middle">
+                        <Eraser />
+                        <hstack
+                        cornerRadius="small"
+                        border="thin"
+                        >
+                        {splitArray(GridPresets, Math.ceil(GridPresets.length / 2)).map((GP, row) => (
+                            <vstack gap='small'>
+                            {GP.map((unused, index) => (
+                                <ShapeCanvas 
+                                presetID = {row * Math.ceil(GridPresets.length / 2) + index } 
+                                currShapeID = {currShapeID} 
+                                setCurrShapeID = {setCurrShapeID} 
+                                setCurrShapeRotation = {setCurrShapeRotation}/> 
+                            ))} 
+                            </vstack>
+                        ))}
+                        </hstack>
+                    </vstack>
+                    <vstack gap="small" height="100%" alignment="center middle">
+                        <Canvas />
+                        <ColorSelector />
+                    </vstack>
+                </hstack>
+                <button onPress={() => {submit(data, context)}}> Submit </button>
+            </vstack>
+        
 
-                </vstack>
-                <vstack gap="small" height="100%" alignment="center middle">
-                    <Canvas />
-                    <ColorSelector />
-                </vstack>
-            </hstack>
         </vstack>
     
    )

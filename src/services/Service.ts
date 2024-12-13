@@ -1,12 +1,13 @@
-import { createClient } from 'redis';
-import dotenv from 'dotenv';
+//import { createClient } from 'redis';
+import { RedisClient, Devvit } from '@devvit/public-api';
+//import dotenv from 'dotenv';
 
-dotenv.config();
+//dotenv.config();
 
 /**
  * Interface representing a single puzzle.
  */
-interface Puzzle {
+export interface Puzzle {
   puzzleId: number;
   userId: number;
   createdAt: string;
@@ -18,27 +19,13 @@ interface Puzzle {
 /**
  * Service class to handle interactions with Redis.
  */
-class Service {
-  private redisClient: ReturnType<typeof createClient>;
+export class Service {
+  private redis: RedisClient;
 
-  constructor() {
-    // Initialize Redis client with environment variables
-    this.redisClient = createClient({
-      socket: {
-        host: process.env.REDIS_HOST || 'localhost', // Use 'localhost' since Redis is exposed on host
-        port: Number(process.env.REDIS_PORT) || 6379,
-      },
-      password: process.env.REDIS_PASSWORD || undefined, // If Redis is secured with a password
-    });
-
-    this.redisClient.on('error', (err) => console.error('Redis Client Error', err));
-
-    // Connect to Redis
-    this.redisClient.connect().then(() => {
-      console.log('Connected to Redis');
-    }).catch(err => {
-      console.error('Failed to connect to Redis:', err);
-    });
+  constructor(context: Devvit.Context) {
+    console.log("Constructor called");
+    this.redis = context.redis
+    //yayy... super simple redis constructor... 
   }
 
   /**
@@ -46,13 +33,23 @@ class Service {
    * @param {string} puzzleId - The ID of the puzzle to fetch.
    * @returns {Promise<Puzzle | null>} The puzzle if found, else null.
    */
+  
   public async getPuzzle(puzzleId: number): Promise<Puzzle | null> {
+    const key = puzzleId.toString();
+
     try {
-      const puzzleData = await this.redisClient.get(`puzzle:${puzzleId}`);
-      if (puzzleData) {
-        return JSON.parse(puzzleData) as Puzzle;
+      const puzzleData = await this.redis.hGetAll(key);
+      if (Object.keys(puzzleData).length === 0) {
+        return null; // Puzzle not found
       }
-      return null;
+      return {
+        puzzleId: parseInt(puzzleData.puzzleId),
+        userId: parseInt(puzzleData.userId),
+        createdAt: puzzleData.createdAt,
+        width: parseInt(puzzleData.width),
+        height: parseInt(puzzleData.height),
+        pixels: JSON.parse(puzzleData.pixels)
+      };
     } catch (error) {
       console.error(`Error fetching puzzle ${puzzleId}:`, error);
       return null;
@@ -64,9 +61,20 @@ class Service {
    * @param {Puzzle} puzzle - The puzzle to save.
    * @returns {Promise<boolean>} True if successful, else false.
    */
+
   public async savePuzzle(puzzle: Puzzle): Promise<boolean> {
+    const key = puzzle.puzzleId.toString();
+    
     try {
-      await this.redisClient.set(`puzzle:${puzzle.puzzleId}`, JSON.stringify(puzzle));
+      await this.redis.hSet(key, {
+        puzzleId: puzzle.puzzleId.toString(),
+        userId: puzzle.userId.toString(),
+        createdAt: puzzle.createdAt,
+        width: puzzle.width.toString(),
+        height: puzzle.height.toString(),
+        pixels: JSON.stringify(puzzle.pixels)
+      });
+      console.log('Puzzle saved successfully using hSet');
       return true;
     } catch (error) {
       console.error(`Error saving puzzle ${puzzle.puzzleId}:`, error);
@@ -88,7 +96,7 @@ class Service {
     }
 
     // Deep comparison
-    return JSON.stringify(userSolution) === JSON.stringify(puzzle.pixels);
+    return JSON.stringify(userSolution) === JSON.stringify(puzzle.pixels); // seems good to me 
   }
 
   /**
@@ -102,9 +110,19 @@ class Service {
       console.warn(`Puzzle ${newPuzzle.puzzleId} already exists.`);
       return false;
     }
-
+    // also add to the user database lol
     return await this.savePuzzle(newPuzzle);
   }
+  // We do NOT need to edit user database. that is out of scope for this context 
+  // plus, that wouldn't help us anyway... 
+  /*public async setFollowerCount(userId, newCount, context) {
+    const hashKey = `user:${userId}`;
+    const field = 'numFollowers';
+    
+    await context.redis.hSet(hashKey, { [field]: newCount.toString() });
+    
+    console.log(`Set follower count for user ${userId} to ${newCount}`);
+  }*/
 }
 
 export default Service;

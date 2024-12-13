@@ -5,35 +5,51 @@ import { WinScreen } from "./WinScreen";
 import { DisplayScreen } from "./DisplayScreen";
 import { GuessPost } from "./GuessPost";
 import { LoadingScreen } from "./loadingScreen";
+import Service from "../services/Service";
 type NavigatorType = {
     _context: Devvit.Context;
 }
 export const Navigator = ({_context}: NavigatorType) => {
-    const [author, setAuthor] = useState(""); // empty author for start 
     const [counter, setCounter] = useState(0);
     const [page, setPage] = useState('a');
     const [resolution, setResolution] = useState(8); // set to 8x8 by default 
 
-    var targetAuthor = "gridlock-game2"
-
-    const { data: nameAuthor, loading, error } = useAsync(async () => {
-        // Make your Reddit API call here
-        var nameAuthor = await logAuthor();
-        return nameAuthor;
-    });
-    function configureGuessPost(): void {
-        // basically query for the guess post and actually display it 
-        setPage("GuessPost");
-
-    }
-    if (nameAuthor && !loading && !error) {
-        if (nameAuthor === targetAuthor) {
-            console.log("LETS GOOOOO");
-            setPage('startScreen'); 
-        } else {
-            console.log("nonspecific username", nameAuthor);
+    const [isCreatePost, setIsCreatePost] = useState(true)
+    const { data: assortedStuff, loading: loading2, error: erro2 } = useAsync(async () => {
+        if (!isCreatePost) {
+            // Your async function that returns a number
+            if (!title) return null
+            let tmpTitle = title ? title : ""
+            let service = new Service(_context)
+            console.log("before doing other things...")
+            let puzzle = await service.getPuzzle(parseInt(tmpTitle))
+            if (!puzzle) return null
+            let pieces = puzzle.pixels
+            let height = puzzle.height
+            console.log(pieces, height)
+            //let width = puzzle.width assume height and width are the same for a grid 
+            //setResolution(height)
+            var pix = Array(height * height).fill(0);
+            for (let i = 0; i < height; i++) {
+                for (let j = 0; j < height; j++) {
+                    pix[i * height + j] = pieces[i][j]
+                }
+            }
+            console.log(pix)
+            //setImageData(pix)
+            //setPage("GuessPost");
+            return  { resolution: height, imageData: pix, page: "GuessPost"};
         }
-    }
+        return null;
+    }, { depends: [isCreatePost] });
+
+    var targetTitle = "Create Tetramatch!"
+
+    const { data: title, loading, error } = useAsync(async () => {
+        // Make your Reddit API call here
+        var title = await getTitle();
+        return title;
+    });
 
     let tst = Array(resolution * resolution).fill(-1)
     // so right now, we have it so that imageData is being sent to currentPage as a solution
@@ -41,6 +57,60 @@ export const Navigator = ({_context}: NavigatorType) => {
     // Is this a feature, or a bug? 
     // we could do it such that GuessPost only alters a new hook called solutionData, but I want to test this approach first 
     const [imageData, setImageData] = useState(tst)
+
+    console.log("Checking conditional async")
+    if (title && page === 'a') { // only switch page if this is the first time 
+        if (title.includes(targetTitle)) {
+            console.log("Title target acquired");
+            setPage('startScreen'); 
+        } else {
+            // we need to invoke guessPost 
+            console.log("nonspecific username", title);
+            if (isCreatePost) setIsCreatePost(false);
+            //setPage('GuessPost'); 
+
+            //configureGuessPost(); // lets see if this works lol
+            // dang it does 
+            // this means, we need to make a call to get the puzzle, as shown by the title 
+            // we can do this with conditional async call hooks 
+            /**
+             * 
+             *   const [shouldMakeCall, setShouldMakeCall] = useState(false);
+                const [storedNumber, setStoredNumber] = useState<number | null>(null);
+
+                const { data, loading, error } = useAsync(async () => {
+                    if (shouldMakeCall) {
+                    // Your async function that returns a number
+                    const result = await someAsyncFunction();
+                    setStoredNumber(result);
+                    return result;
+                    }
+                    return null;
+                }, { depends: [shouldMakeCall] });
+             */
+        }
+    }
+    if (assortedStuff && page === 'a') {
+        console.log("assorted stuff lol")
+        console.log(assortedStuff);
+
+        setResolution(assortedStuff.resolution);
+        setImageData(assortedStuff.imageData);
+        //setPage(assortedStuff.page); 
+        //setPage('GuessPost'); 
+        setPage(prevPage => {
+            console.log("Updating page from", prevPage, "to GuessPost");
+            return assortedStuff.page;
+        });
+
+        console.log("Page shoudl be set now...")
+    }
+    /*conditionalAsync(); // check for conditional async stuff once every rerender 
+    function conditionalAsync() {
+        
+    }*/
+
+
     let currentPage;
     switch (page) {
       case 'startScreen':
@@ -91,6 +161,20 @@ export const Navigator = ({_context}: NavigatorType) => {
         //currentPage = <DisplayScreen resolution={8} data={pix2}/>;
 
     }
+    async function getTitle() {
+        const postId = _context.postId ? _context.postId : "";
+        if (postId === "") return "";
+        var title = "";
+        try {
+            const post = await _context.reddit.getPostById(postId);
+            console.log(`The current post's title is: ${post?.title}`);
+            title = post?.title;
+            //setAuthor(nameAuthor);
+        } catch (error) {
+            console.error("Error fetching user:", error);
+        }
+        return title;
+    }
     async function logAuthor() {
         const postId = _context.postId ? _context.postId : "";
         var nameAuthor = "";
@@ -116,6 +200,26 @@ export const Navigator = ({_context}: NavigatorType) => {
         .catch((error) => console.error("Error:", error));
     }
     //logAuthor(); // logs the author to begin 
+    /*
+    <button
+        onPress={async () => {
+            const subreddit = await _context.reddit.getCurrentSubreddit();
+            await _context.reddit.submitPost({
+            // Screw it, set the title to be the puzzleID 
+            title: 'sakdfjlkdsa!',
+            subredditName: subreddit.name,
+            preview: (
+                <vstack>
+                <text>Loading ...</text>
+                </vstack>
+            ),
+            });
+            _context.ui.showToast('Created post!');
+        }}
+        >
+        Create Post
+    </button>
+    */
     return (
         <blocks>
             <button onPress={ () => {
