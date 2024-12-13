@@ -59,6 +59,25 @@ export const Navigator = ({_context}: NavigatorType) => {
     const [imageData, setImageData] = useState(tst)
 
     console.log("Checking conditional async")
+    /*if (page === 'a') {
+        if (title && title.includes(targetTitle)) {
+            console.log("Title target acquired");
+            setPage('startScreen');
+        } else if (assortedStuff) {
+            console.log("assorted stuff lol");
+            console.log(assortedStuff);
+            setResolution(assortedStuff.resolution);
+            setImageData(assortedStuff.imageData);
+            setPage('GuessPost');
+        } else {
+            console.log("nonspecific username", title);
+            if (isCreatePost) {
+                console.log("IsCreatePost")
+                setIsCreatePost(false);
+            }
+        }
+    }*/
+    console.log("test", assortedStuff)
     if (title && page === 'a') { // only switch page if this is the first time 
         if (title.includes(targetTitle)) {
             console.log("Title target acquired");
@@ -66,7 +85,11 @@ export const Navigator = ({_context}: NavigatorType) => {
         } else {
             // we need to invoke guessPost 
             console.log("nonspecific username", title);
-            if (isCreatePost) setIsCreatePost(false);
+            if (isCreatePost)
+            {
+                console.log("is create post!")
+                setIsCreatePost(false);  
+            } 
             //setPage('GuessPost'); 
 
             //configureGuessPost(); // lets see if this works lol
@@ -94,17 +117,22 @@ export const Navigator = ({_context}: NavigatorType) => {
         console.log("assorted stuff lol")
         console.log(assortedStuff);
 
-        setResolution(assortedStuff.resolution);
-        setImageData(assortedStuff.imageData);
+        //setResolution(assortedStuff.resolution);
+        //setImageData(assortedStuff.imageData);
         //setPage(assortedStuff.page); 
-        //setPage('GuessPost'); 
-        setPage(prevPage => {
+        setPage('GuessPost'); 
+        /*setPage(prevPage => {
             console.log("Updating page from", prevPage, "to GuessPost");
             return assortedStuff.page;
-        });
+        });*/
 
-        console.log("Page shoudl be set now...")
+       console.log("Page shoudl be set now...")
     }
+    /*if (assortedStuff) {
+        console.log("asfdsdaf", assortedStuff);
+        setPage('GuessPost'); 
+
+    }*/
     /*conditionalAsync(); // check for conditional async stuff once every rerender 
     function conditionalAsync() {
         
@@ -226,7 +254,8 @@ export const Navigator = ({_context}: NavigatorType) => {
                 //setPage("GuessPost")
                 console.log("Do nothing!!!");
             }}
-            > Press me 
+            > {assortedStuff ? assortedStuff.page.toString() : "nothing"} 
+            and page: {page}
             </button> 
             {currentPage}
         </blocks> 
