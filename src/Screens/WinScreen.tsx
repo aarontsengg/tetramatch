@@ -11,7 +11,7 @@ type WinScreenProps = {
 export const WinScreen = ({data, resolution, setPage}: WinScreenProps) =>  {
 
     return ( 
-        <vstack alignment="center middle" height = "100%">
+        <vstack alignment="center middle" height = "100%" gap="small">
             <text> You win lol 🎉🎉🎉 </text>
             <DisplayScreen data={data} resolution={resolution}></DisplayScreen>
             <button onPress={() => {setPage("startScreen")}}> Back to home </button>

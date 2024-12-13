@@ -1,59 +1,23 @@
-import {Devvit, } from '@devvit/public-api'
+async function validateSoln(data: Pixel[], context: Devvit.Context) {
+        //setPage("WinScreen")
 
-type PageProps = {
-  setPage: (page: string) => void;
-}
+        var arr = Array.from({ length: resolution }, () => new Array(resolution).fill(0));
+        for (let i = 0; i < resolution; i++) {
+            for (let j = 0; j < resolution; j++) {
+                let dat = data[i * resolution + j]
+                arr[i][j] = dat.color;
+            }
+        }
+        var service = new Service(context);
+        var res = await service.validateSolution(+puzzleID, arr)
+        console.log("result", res);
+        if (res) {
+            console.log("Yay!!! You Win!")
+            context.ui.showToast({text: "Correct!", appearance: 'success'});
+            setPage("WinScreen")
+        } else {
+            context.ui.showToast({text: "Wrong answer...", appearance: 'success'});
+        }
+        //setPage("WinScreen")
 
-const PageA = ({ setPage }: PageProps) => (
-  <vstack
-    width="100%"
-    height="100%"
-    alignment="middle center"
-    gap="large"
-    backgroundColor="lightblue"
-  >
-    <text size="xxlarge">Page A</text>
-    <button onPress={() => setPage('b')}>Go to B</button>
-  </vstack>
-);
-
-const PageB = ({ setPage }: PageProps) => (
-  <vstack
-    width="100%"
-    height="100%"
-    alignment="middle center"
-    gap="large"
-    backgroundColor="pink"
-  >
-    <text size="xxlarge">Page B</text>
-    <button onPress={() => setPage('a')}>Go to A</button>
-  </vstack>
-);
-
-Devvit.addCustomPostType({
-  name: 'Name',
-  render: context => {
-    const { useState } = context;
-    const [page, setPage] = useState('a');
-
-    let currentPage;
-    switch (page) {
-      case 'a':
-        currentPage = <PageA setPage={setPage} />;
-        break;
-      case 'b':
-        currentPage = <PageB setPage={setPage} />;
-        break;
-      default:
-        currentPage = <PageA setPage={setPage} />;
     }
-
-    return (
-      <blocks>
-        {currentPage}
-      </blocks>
-    )
-  }
-})
-
-export default Devvit

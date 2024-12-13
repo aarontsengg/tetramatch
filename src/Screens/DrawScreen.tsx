@@ -33,8 +33,11 @@ type DrawScreenProps = {
   context: Devvit.Context;
   setImageData: (img: number[]) => void;
   solnImg: number[];
+  puzzleID: Number;
+  page: string; 
 }
-export const DrawScreen = ({setPage, context, setImageData, solnImg}: DrawScreenProps) => {
+export const DrawScreen = ({setPage, context, setImageData, solnImg, puzzleID, page}: DrawScreenProps) => {
+    const [isCreatePost, setIsCreatePost] = useState(puzzleID === -1) // boolean 
     const blankCanvas = new Array(resolution * resolution).fill(new Pixel());
     for (let i = 0; i < resolution; i++) {
         for (let j = 0; j < resolution; j++) {
@@ -226,12 +229,11 @@ export const DrawScreen = ({setPage, context, setImageData, solnImg}: DrawScreen
             }
          */
     }
-    function validate(data: Pixel[], context: Devvit.Context) {
+    async function validateSoln(data: Pixel[], context: Devvit.Context) {
+        console.log("Validate Soln submitted ");
+        // Done without async data 
+        //setPage("WinScreen")
 
-    }
-    async function submit(data: Pixel[], context: Devvit.Context) {
-        // Query Reddit API for username/userID
-        console.log("Submitted by {username}");
         var arr = Array.from({ length: resolution }, () => new Array(resolution).fill(0));
         for (let i = 0; i < resolution; i++) {
             let s = '';
@@ -245,19 +247,50 @@ export const DrawScreen = ({setPage, context, setImageData, solnImg}: DrawScreen
         var arr2 = Array(resolution * resolution).fill(0);
         for (let i = 0; i < data.length; i++) arr2[i] = data[i].color;
         console.log(arr2);
+        //var service = new Service(context);
+        //var res = await service.validateSolution(+puzzleID, arr)
+        // took out async stuff 
+        var res = JSON.stringify(arr2) === JSON.stringify(solnImg);
+        console.log("result", res);
+        if (res) {
+            console.log("Yay!!! You Win!")
+            context.ui.showToast({text: "Victory!", appearance: 'success'});
+            setPage("WinScreen")
+
+        } else {
+            console.log("Oof, not quite...")
+            context.ui.showToast({text: "Oof, not quite...!", appearance: 'success'});
+        }
+
+    }
+    async function submit(data: Pixel[], context: Devvit.Context) {
+        // Query Reddit API for username/userID
+        console.log("You submitted a puzzle")
+        var arr = Array.from({ length: resolution }, () => new Array(resolution).fill(0));
+        for (let i = 0; i < resolution; i++) {
+            let s = '';
+            for (let j = 0; j < resolution; j++) {
+                let dat = data[i * resolution + j]
+                s = s.concat(`${dat.color}|${dat.id}\t`);
+                arr[i][j] = dat.color;
+            }
+            console.log(s);
+        }
+        var arr2 = Array(resolution * resolution).fill(0);
+        for (let i = 0; i < data.length; i++) arr2[i] = data[i].color;
+        console.log(arr2);
+
+        console.log("Submitted by {username}");
+        context.ui.showToast({text: "Submitted!", appearance: 'success'});
+        setImageData(arr2);
+        setPage("WinScreen"); // switch page if successful 
+        // all the code above the await call should be ok 
+        // all the code below the await call we can assume only works with async contexts 
         var service = new Service(context);
-        // [TypeError: (void 0) is not a constructor]
         console.log("Object object lolol with maybe object promise???", service)
         var puzzleID = await createPuzzle(context, service, resolution, resolution, arr); // async function, returns puzzle ID, no dependencies 
-        //let res = service.validateSolution(arr, "puzzle1")
-        //console.log("result", res);
         let success2 = await createPost(puzzleID, context)
         if (success2) console.log("Yay, you created a post!")
-        context.ui.showToast({text: "Submitted!", appearance: 'success'});
-        let success = 1; // always set to 1 for now, else set to res once res is working
-        if (success) context.ui.showToast("Success set to 1 for debug purposes");
-        setImageData(arr2);
-        if (success) setPage("WinScreen"); // switch page if successful 
     }
     async function createPost(puzzleID: number, context: Devvit.Context) {
         try {
@@ -339,7 +372,11 @@ export const DrawScreen = ({setPage, context, setImageData, solnImg}: DrawScreen
                         <ColorSelector />
                     </vstack>
                 </hstack>
-                <button onPress={() => {submit(data, context)}}> Submit </button>
+                <button onPress={() => {
+                    if (isCreatePost) submit(data, context)
+                    else validateSoln(data, context)
+                    
+                    }}> {isCreatePost ? "Create Puzzle" : "Submit Solution"} </button>
             </vstack>
         
 
