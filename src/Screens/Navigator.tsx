@@ -13,11 +13,35 @@ export const Navigator = ({_context}: NavigatorType) => {
     const [counter, setCounter] = useState(0);
     const [page, setPage] = useState('a');
     const [resolution, setResolution] = useState(8); // set to 8x8 by default 
-
+    const [dummy, setDummy] = useState("Dumbbb")
     const [isCreatePost, setIsCreatePost] = useState(true)
+    const updateData = async () => {
+        // Your async function that returns a number
+        if (!title) return null
+        let tmpTitle = title ? title : ""
+        let service = new Service(_context)
+        console.log("before doing other things...")
+        let puzzle = await service.getPuzzle(parseInt(tmpTitle))
+        if (!puzzle) return null
+        let pieces = puzzle.pixels
+        let height = puzzle.height
+        console.log(pieces, height)
+        //let width = puzzle.width assume height and width are the same for a grid 
+        setResolution(height)
+        var pix = Array(height * height).fill(0);
+        for (let i = 0; i < height; i++) {
+            for (let j = 0; j < height; j++) {
+                pix[i * height + j] = pieces[i][j]
+            }
+        }
+        console.log(pix)
+        setImageData(pix)
+        setPage("GuessPost");
+        //const newData = await someAsyncOperation();
+        //setData(newData);
+      };
     const { data: assortedStuff, loading: loading2, error: erro2 } = useAsync(async () => {
         if (!isCreatePost) {
-            // Your async function that returns a number
             if (!title) return null
             let tmpTitle = title ? title : ""
             let service = new Service(_context)
@@ -38,6 +62,7 @@ export const Navigator = ({_context}: NavigatorType) => {
             console.log(pix)
             //setImageData(pix)
             //setPage("GuessPost");
+            
             return  { resolution: height, imageData: pix, page: "GuessPost"};
         }
         return null;
@@ -82,7 +107,21 @@ export const Navigator = ({_context}: NavigatorType) => {
         if (title.includes(targetTitle)) {
             console.log("Title target acquired");
             setPage('startScreen'); 
-        } else {
+        } /*else if (assortedStuff) {
+            console.log("assorted stuff lol")
+            console.log(assortedStuff);
+    
+            //setResolution(assortedStuff.resolution);
+            //setImageData(assortedStuff.imageData);
+            //setPage(assortedStuff.page); 
+            setPage('GuessPost'); */
+            /*setPage(prevPage => {
+                console.log("Updating page from", prevPage, "to GuessPost");
+                return assortedStuff.page;
+            });*/
+    
+        //     console.log("Page shoudl be set now...")
+        // } else {
             // we need to invoke guessPost 
             console.log("nonspecific username", title);
             if (isCreatePost)
@@ -91,6 +130,7 @@ export const Navigator = ({_context}: NavigatorType) => {
                 setIsCreatePost(false);  
             } 
             //setPage('GuessPost'); 
+            updateData();
 
             //configureGuessPost(); // lets see if this works lol
             // dang it does 
@@ -116,16 +156,16 @@ export const Navigator = ({_context}: NavigatorType) => {
     if (assortedStuff && page === 'a') {
         console.log("assorted stuff lol")
         console.log(assortedStuff);
-
-        //setResolution(assortedStuff.resolution);
-        //setImageData(assortedStuff.imageData);
-        //setPage(assortedStuff.page); 
         setPage('GuessPost'); 
+        setResolution(100000);
+        setDummy("smarty")
         /*setPage(prevPage => {
             console.log("Updating page from", prevPage, "to GuessPost");
             return assortedStuff.page;
         });*/
-
+        //setResolution(assortedStuff.resolution);
+        //setImageData(assortedStuff.imageData);
+        //setPage(assortedStuff.page); 
        console.log("Page shoudl be set now...")
     }
     /*if (assortedStuff) {
@@ -216,7 +256,7 @@ export const Navigator = ({_context}: NavigatorType) => {
         }
         return nameAuthor;
     }
-    function configurePage() {
+    /*function configurePage() {
         logAuthor()
         .then((result) => {
             if (result === targetAuthor) {
@@ -226,37 +266,21 @@ export const Navigator = ({_context}: NavigatorType) => {
             }
         })
         .catch((error) => console.error("Error:", error));
+    }*/
+    function dumbfunction(tst) {
+        console.log("Well that was dumb...")
+        setPage("GuessPost")
+        return tst.page.toString();
     }
-    //logAuthor(); // logs the author to begin 
-    /*
-    <button
-        onPress={async () => {
-            const subreddit = await _context.reddit.getCurrentSubreddit();
-            await _context.reddit.submitPost({
-            // Screw it, set the title to be the puzzleID 
-            title: 'sakdfjlkdsa!',
-            subredditName: subreddit.name,
-            preview: (
-                <vstack>
-                <text>Loading ...</text>
-                </vstack>
-            ),
-            });
-            _context.ui.showToast('Created post!');
-        }}
-        >
-        Create Post
-    </button>
-    */
     return (
         <blocks>
             <button onPress={ () => {
                 //setPage("GuessPost")
                 console.log("Do nothing!!!");
             }}
-            > {assortedStuff ? assortedStuff.page.toString() : "nothing"} 
-            and page: {page}
-            </button> 
+            > {assortedStuff ? dumbfunction(assortedStuff) : "nothing"} 
+            and page: {page} and res: {resolution} and dummy: {dummy}
+            </button>  
             {currentPage}
         </blocks> 
     );
