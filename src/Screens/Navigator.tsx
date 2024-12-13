@@ -130,8 +130,6 @@ export const Navigator = ({_context}: NavigatorType) => {
     }
     return (
         <blocks>
-            <button> Page: {page} </button>
-
             {currentPage}
         </blocks> 
     );
