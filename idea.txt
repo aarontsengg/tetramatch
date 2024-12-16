@@ -48,22 +48,10 @@ canvas size
     - 32x32 
 
 What's left to do:
- - Functionality to create post from DrawScreen
-    - Need to generate a puzzleID
-    - Need to put together puzzle things 
-    - set Author to grid_match_2 by default - can change this later... 
-    - actually, no set it to the actual author
-        - need to figure out how to handle async calls for this 
     
  - Make display screen look better 
- - Functionality to validate solutions from DrawScreen 
-    - Requires the use of a "createMode" prop that tells DrawScreen whether it is in create or destroy mode. 
-    -> alternatively, we can create a CreateScreen and an AttemptScreen which have these functionalities separately 
-    - where they both import the DrawScreen component. 
-
-- Currently:
-    - working on Redis database, designing user system. 
-    - actually, we don't need to do this since we're getting by puzzleId anyway 
+ - Maybe cache the api calls because its getting kinda slow with every post. 
+ - Literally doesn't change, so we can cache everything 
 
 
 

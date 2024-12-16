@@ -22,33 +22,40 @@ export const Navigator = ({_context}: NavigatorType) => {
     var targetTitle = "Create Tetramatch!"
 
     const { data: conditionalStuff, loading, error } = useAsync(async () => {
-        // Make your Reddit API call here
-        var title = await getTitle();
-        var pieces = tst;
-        var height = resolution;
-        var page = "startScreen"
-        var createPost = true
-        if (title && !title.includes(targetTitle)) {
-            // Async call to query data from the database
-            let service = new Service(_context)
-            let puzzle = await service.getPuzzle(parseInt(title))
-            if (!puzzle) return {title: title, pieces: pieces, height: height, page: page, createPost: createPost};
-            pieces = puzzle.pixels
-            height = puzzle.height
-            //let width = puzzle.width assume height and width are the same for a grid 
-            var pix = Array(height * height).fill(0);
-            for (let i = 0; i < height; i++) {
-                for (let j = 0; j < height; j++) {
-                    pix[i * height + j] = pieces[i][j]
+        return await _context.cache(
+            async () => {
+                // Your existing async logic here
+                var title = await getTitle();
+                var pieces = tst;
+                var height = resolution;
+                var page = "startScreen"
+                var createPost = true
+                if (title && !title.includes(targetTitle)) {
+                    // Async call to query data from the database
+                    let service = new Service(_context)
+                    let puzzle = await service.getPuzzle(parseInt(title))
+                    if (!puzzle) return {title: title, pieces: pieces, height: height, page: page, createPost: createPost};
+                    pieces = puzzle.pixels
+                    height = puzzle.height
+                    var pix = Array(height * height).fill(0);
+                    for (let i = 0; i < height; i++) {
+                        for (let j = 0; j < height; j++) {
+                            pix[i * height + j] = pieces[i][j]
+                        }
+                    }
+                    pieces = pix
+                    page = "GuessPost"
+                    createPost = false
+                } else {
+                    console.log("Title target acquired"); 
                 }
+                return {title: title, pieces: pieces, height: height, page: page, createPost: createPost};
+            },
+            {
+                key: `puzzle_${_context.postId}`, // Use a unique key, the postID
+                ttl:  24 * 60 * 60 * 1000, // Cache for 24 hours (adjust as needed)
             }
-            pieces = pix
-            page = "GuessPost"
-            createPost = false
-        } else {
-            console.log("Title target acquired");
-        }
-        return {title: title, pieces: pieces, height: height, page: page, createPost: createPost};
+        );
     });
 
     if (conditionalStuff && page === 'a') { // only switch page if this is the first time 
@@ -61,7 +68,7 @@ export const Navigator = ({_context}: NavigatorType) => {
             setPuzzleID(parseInt(title))
         }
 
-        console.log("res", conditionalStuff)
+        //console.log("res", conditionalStuff)
     }
 
     let currentPage;
