@@ -35,8 +35,9 @@ type DrawScreenProps = {
   solnImg: number[];
   puzzleID: Number;
   page: string; 
+  setScore: (num: number) => void ;
 }
-export const DrawScreen = ({setPage, context, setImageData, solnImg, puzzleID, page}: DrawScreenProps) => {
+export const DrawScreen = ({setPage, context, setImageData, solnImg, puzzleID, page, setScore}: DrawScreenProps) => {
     const [isCreatePost, setIsCreatePost] = useState(puzzleID === -1) // boolean 
     const blankCanvas = new Array(resolution * resolution).fill(new Pixel());
     for (let i = 0; i < resolution; i++) {
@@ -51,6 +52,7 @@ export const DrawScreen = ({setPage, context, setImageData, solnImg, puzzleID, p
     const [currShapeID, setCurrShapeID] = useState(0); // placeholder lol, we'll use an object
     const [idCTR, setIdCTR] = useState(1);
     const [currShapeRotation, setCurrShapeRotation] = useState(0); // only set by shape selection
+    const [piecesUsed, setPiecesUsed] = useState(0)
     // also this is shapeID  
     
     const ColorSelector = () => (
@@ -123,6 +125,7 @@ export const DrawScreen = ({setPage, context, setImageData, solnImg, puzzleID, p
             // we need to do this add anchorX and anchorY thing
         }
         setIdCTR(idCTR + 1);
+        setPiecesUsed(piecesUsed + 1); // increment by 1 
         return 1; // exit success 
     }
     function erase(data: Pixel[], x: number, y: number): number {
@@ -139,6 +142,7 @@ export const DrawScreen = ({setPage, context, setImageData, solnImg, puzzleID, p
                 }
             }
         }
+        setPiecesUsed(piecesUsed - 1); // should only decrement when actual decrement  
         return 1;
 
     }
@@ -230,7 +234,7 @@ export const DrawScreen = ({setPage, context, setImageData, solnImg, puzzleID, p
          */
     }
     async function validateSoln(data: Pixel[], context: Devvit.Context) {
-        console.log("Validate Soln submitted ");
+        //console.log("Validate Soln submitted ");
         // Done without async data 
         //setPage("WinScreen")
 
@@ -242,30 +246,31 @@ export const DrawScreen = ({setPage, context, setImageData, solnImg, puzzleID, p
                 s = s.concat(`${dat.color}|${dat.id}\t`);
                 arr[i][j] = dat.color;
             }
-            console.log(s);
+            //console.log(s);
         }
         var arr2 = Array(resolution * resolution).fill(0);
         for (let i = 0; i < data.length; i++) arr2[i] = data[i].color;
-        console.log(arr2);
+        //console.log(arr2);
         //var service = new Service(context);
         //var res = await service.validateSolution(+puzzleID, arr)
         // took out async stuff 
         var res = JSON.stringify(arr2) === JSON.stringify(solnImg);
-        console.log("result", res);
+        //console.log("result", res);
         if (res) {
-            console.log("Yay!!! You Win!")
+            //console.log("Yay!!! You Win!")
             context.ui.showToast({text: "Victory!", appearance: 'success'});
+            setScore(piecesUsed);
             setPage("WinScreen")
 
         } else {
-            console.log("Oof, not quite...")
+            //console.log("Oof, not quite...")
             context.ui.showToast({text: "Oof, not quite...!", appearance: 'success'});
         }
 
     }
     async function submit(data: Pixel[], context: Devvit.Context) {
         // Query Reddit API for username/userID
-        console.log("You submitted a puzzle")
+        //console.log("You submitted a puzzle")
         var arr = Array.from({ length: resolution }, () => new Array(resolution).fill(0));
         for (let i = 0; i < resolution; i++) {
             let s = '';
@@ -274,23 +279,23 @@ export const DrawScreen = ({setPage, context, setImageData, solnImg, puzzleID, p
                 s = s.concat(`${dat.color}|${dat.id}\t`);
                 arr[i][j] = dat.color;
             }
-            console.log(s);
+            //console.log(s);
         }
         var arr2 = Array(resolution * resolution).fill(0);
         for (let i = 0; i < data.length; i++) arr2[i] = data[i].color;
-        console.log(arr2);
+        //console.log(arr2);
 
-        console.log("Submitted by {username}");
+        //console.log("Submitted by {username}");
         context.ui.showToast({text: "Submitted!", appearance: 'success'});
         setImageData(arr2);
         setPage("WinScreen"); // switch page if successful 
         // all the code above the await call should be ok 
         // all the code below the await call we can assume only works with async contexts 
         var service = new Service(context);
-        console.log("Object object lolol with maybe object promise???", service)
+        //console.log("Object object lolol with maybe object promise???", service)
         var puzzleID = await createPuzzle(context, service, resolution, resolution, arr); // async function, returns puzzle ID, no dependencies 
         let success2 = await createPost(puzzleID, context)
-        if (success2) console.log("Yay, you created a post!")
+        //if (success2) console.log("Yay, you created a post!")
     }
     async function createPost(puzzleID: number, context: Devvit.Context) {
         try {
@@ -337,7 +342,6 @@ export const DrawScreen = ({setPage, context, setImageData, solnImg, puzzleID, p
                 height="48px"
                 width="48px"
                 onPress={() => {
-                    console.log("Eraser selected");
                     setCurrShapeID(-1); // -1 stands in for eraser 
                     // maybe we should use enums instead of numbers 
                 }}
@@ -372,9 +376,10 @@ export const DrawScreen = ({setPage, context, setImageData, solnImg, puzzleID, p
                         <ColorSelector />
                     </vstack>
                 </hstack>
+                <text> Pieces Used: {piecesUsed}</text>
                 <button onPress={() => {
                     if (isCreatePost) submit(data, context)
-                    else validateSoln(data, context)
+                    else validateSoln(data, context) 
                     
                     }}> {isCreatePost ? "Create Puzzle" : "Submit Solution"} </button>
             </vstack>

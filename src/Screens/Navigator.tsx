@@ -18,7 +18,7 @@ export const Navigator = ({_context}: NavigatorType) => {
     const [puzzleID, setPuzzleID] = useState(-1)
     let tst = Array(resolution * resolution).fill(-1)
     const [imageData, setImageData] = useState(tst)
-
+    const [score, setScore] = useState(0);
     var targetTitle = "Create Tetramatch!"
 
     const { data: conditionalStuff, loading, error } = useAsync(async () => {
@@ -46,8 +46,6 @@ export const Navigator = ({_context}: NavigatorType) => {
                     pieces = pix
                     page = "GuessPost"
                     createPost = false
-                } else {
-                    console.log("Title target acquired"); 
                 }
                 return {title: title, pieces: pieces, height: height, page: page, createPost: createPost};
             },
@@ -78,10 +76,10 @@ export const Navigator = ({_context}: NavigatorType) => {
         break;
       case 'drawScreen':
         //currentPage = <CounterScreen setPage={setPage} setCounter={setCounter} counter={counter}/>;
-        currentPage = <DrawScreen setPage={setPage} context={_context} setImageData={setImageData} page={page} solnImg={imageData} puzzleID={puzzleID}/>
+        currentPage = <DrawScreen setScore={setScore} setPage={setPage} context={_context} setImageData={setImageData} page={page} solnImg={imageData} puzzleID={puzzleID}/>
         break;
       case 'WinScreen':
-        currentPage = <WinScreen data={imageData} resolution={resolution} setPage={setPage}/> // note that there is no parameter, and you're stuck on the win screen lol 
+        currentPage = <WinScreen score={score} data={imageData} resolution={resolution} setPage={setPage}/> // note that there is no parameter, and you're stuck on the win screen lol 
         break;
       case 'DisplayScreen':
         // start with a 2D array 
