@@ -3,7 +3,14 @@ import { Devvit } from '@devvit/public-api';
 type PageAProps = {
     setPage: (page: string) => void;
 }
-
+/**
+ * 
+ * <button onPress={() => {
+        console.log("Set display Screen")
+        setPage('DisplayScreen')
+      }}>Go to Display Test</button> took out this btw 
+ * 
+ */
 export const StartScreen = ({ setPage }: PageAProps) => (
     <vstack
       width="100%"
@@ -14,9 +21,6 @@ export const StartScreen = ({ setPage }: PageAProps) => (
     >
       <text size="xxlarge">Start Screen</text>
       <button onPress={() => setPage('drawScreen')}>Go to Draw</button>
-      <button onPress={() => {
-        console.log("Set display Screen")
-        setPage('DisplayScreen')
-      }}>Go to Display Test</button>
+    
     </vstack>
 );
