@@ -14,5 +14,9 @@ export const StartScreen = ({ setPage }: PageAProps) => (
     >
       <text size="xxlarge">Start Screen</text>
       <button onPress={() => setPage('drawScreen')}>Go to Draw</button>
+      <button onPress={() => {
+        console.log("Set display Screen")
+        setPage('DisplayScreen')
+      }}>Go to Display Test</button>
     </vstack>
 );

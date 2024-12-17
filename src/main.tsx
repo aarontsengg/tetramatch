@@ -1,12 +1,28 @@
 // Learn more at developers.reddit.com/docs
 import { Devvit, useState } from '@devvit/public-api';
-import { StartScreen } from './startScreen.js';
-import { CounterScreen } from './CounterScreen.js';
-import {DrawScreen} from './DrawScreen.js';
-
+import { StartScreen } from './Screens/startScreen.js';
+import { CounterScreen } from './Screens/CounterScreen.js';
+import {DrawScreen} from './Screens/DrawScreen.js';
+import { WinScreen } from './Screens/WinScreen.js';
+import { DisplayScreen } from './Screens/DisplayScreen.js';
+import { GuessPost } from './Screens/GuessPost.js';
+import { StatementSync } from 'node:sqlite';
+import { Navigator } from './Screens/Navigator.js';
 Devvit.configure({
   redditAPI: true,
   redis: true
+});
+
+
+// Add a post type definition
+Devvit.addCustomPostType({
+  name: 'Experience Post',
+  height: 'tall',
+  render: (_context) => {
+    return (
+        <Navigator _context={_context}/>
+    );
+  },
 });
 
 
@@ -24,7 +40,7 @@ Devvit.addMenuItem({
     const utcCurrentDate = Date.UTC(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate());
     const diffTime = utcCurrentDate - utcStartDate;
     const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1; // +1 to start counting from Tetramatch 1
-    const postTitle = `Tetramatch ${diffDays}`;
+    const postTitle = `Create Tetramatch! ${diffDays}`;
     await reddit.submitPost({
       title: postTitle,
       subredditName: subreddit.name,
@@ -38,33 +54,14 @@ Devvit.addMenuItem({
     ui.showToast({ text: 'Created post!' });
   },
 });
-
-// Add a post type definition
-Devvit.addCustomPostType({
-  name: 'Experience Post',
-  height: 'tall',
-  
-  render: (_context) => {
-    const [counter, setCounter] = useState(0);
-    const [page, setPage] = useState('a');
-
-    let currentPage;
-    switch (page) {
-      case 'startScreen':
-        currentPage = <StartScreen setPage={setPage} />;
-        break;
-      case 'drawScreen':
-        //currentPage = <CounterScreen setPage={setPage} setCounter={setCounter} counter={counter}/>;
-        currentPage = <DrawScreen setPage={setPage}/>
-        break;
-      default:
-        currentPage = <StartScreen setPage={setPage} />;
-    }
-    return (
-      <blocks>
-        {currentPage}
-      </blocks>
-    );
+Devvit.addMenuItem({
+  location: 'subreddit',
+  label: 'Test Redis',
+  onPress: async (event, { redis }) => {
+    const key = 'hello';
+    await redis.set(key, 'world');
+    const value = await redis.get(key);
+    console.log(`${key}: ${value}`);
   },
 });
 

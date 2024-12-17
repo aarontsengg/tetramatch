@@ -1,6 +1,6 @@
 {
   "private": true,
-  "name": "tetris-tangram",
+  "name": "tetramatch",
   "version": "0.0.0",
   "license": "BSD-3-Clause",
   "scripts": {
@@ -12,11 +12,10 @@
     "@devvit/public-api": "0.11.3",
     "axios": "^1.7.9",
     "cors": "^2.8.5",
-    "dotenv": "^16.4.7",
     "express": "^4.21.2",
+    "fs": "^0.0.1-security",
     "mongodb": "^6.11.0",
-    "mongoose": "^8.8.4",
-    "redis": "^4.7.0"
+    "mongoose": "^8.8.4"
   },
   "devDependencies": {
     "@types/axios": "^0.9.36",
@@ -27,5 +26,10 @@
     "concurrently": "^8.0.1",
     "ts-node": "^10.9.1",
     "typescript": "5.3.2"
+  },
+  "browser": {
+    "fs": false,
+    "path": false,
+    "os": false
   }
 }

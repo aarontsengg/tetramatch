@@ -47,3 +47,16 @@ canvas size
     - 16x16
     - 32x32 
 
+What's left to do:
+    
+ - Make display screen look better 
+ - Maybe cache the api calls because its getting kinda slow with every post. 
+ - Literally doesn't change, so we can cache everything 
+
+
+
+- Puzzle IDs - 
+- 632788925820425000 - test 
+- 404579456717492100 - also a test 
+- 343002817581149500 - also a test 
+- 958763274446876200 - fire 
