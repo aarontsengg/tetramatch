@@ -1,6 +1,8 @@
 
 Welcome to Tetramatch, a Devvit Hackathon Submission. 
 
+(Note, Mobile UI not currently supported. Dark mode not supported)
+
 
 HOW TO PLAY:
 
